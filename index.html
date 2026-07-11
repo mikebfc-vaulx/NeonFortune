@@ -29,11 +29,13 @@
       <button id="sound" aria-label="Audio">♪</button>
     </header>
     <div id="roomBar" class="room-bar hidden">LOBBY <strong id="currentRoom">------</strong> · <span id="onlineCount">1</span> GIOCATORI <button id="copyRoom">COPIA CODICE</button></div>
+    <div id="eventBanner" class="event-banner hidden"><strong id="eventName">EVENTO</strong><span id="eventTime">25s</span></div>
+    <div class="side-hud"><div class="combo-box"><small>COMBO SQUADRA</small><strong id="comboValue">×0</strong><div><i id="comboFill"></i></div></div><div class="mission-box"><small>MISSIONE</small><strong id="missionName">Raccogli 2 misteri</strong><span id="missionProgress">0 / 2</span></div><div class="role-box"><small>ABILITÀ</small><strong id="roleName">FORTUNATO</strong></div></div>
 
     <section class="casino-wrap">
       <canvas id="casino" width="960" height="540" aria-label="Sala del casinò"></canvas>
       <div id="prompt" class="prompt hidden">Premi <b>E</b> per giocare</div>
-      <div class="controls">WASD / FRECCE: muoviti · E: gioca · SPAZIO: pugno · oppure clicca un tavolo</div>
+      <div class="controls">WASD: muoviti · E: gioca · SPAZIO: pugno · 1–5: emote</div>
     </section>
   </main>
 
