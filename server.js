@@ -32,7 +32,7 @@ const server = http.createServer((req, res) => {
   });
   fs.createReadStream(file).pipe(res);
 });
-const wss = new WebSocketServer({ server });
+const wss = new WebSocketServer({ server, perMessageDeflate: false });
 const code = () => {
   let c;
   do c = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -40,12 +40,15 @@ const code = () => {
   return c;
 };
 const send = (ws, data) =>
-  ws.readyState === WebSocket.OPEN && ws.send(JSON.stringify(data));
-const broadcast = (room, data, except) =>
-  room &&
+  ws.readyState === WebSocket.OPEN &&
+  ws.send(typeof data === "string" ? data : JSON.stringify(data));
+const broadcast = (room, data, except) => {
+  if (!room) return;
+  const payload = JSON.stringify(data);
   room.players.forEach((p) => {
-    if (p.ws !== except) send(p.ws, data);
+    if (p.ws !== except) send(p.ws, payload);
   });
+};
 const roster = (room) =>
   [...room.players.values()].map((p) => ({
     id: p.id,
@@ -57,6 +60,9 @@ const roster = (room) =>
     ready: p.ready,
   }));
 wss.on("connection", (ws) => {
+  ws.isAlive = true;
+  ws.on("pong", () => (ws.isAlive = true));
+  ws._socket?.setNoDelay(true);
   const player = {
     id: Math.random().toString(36).slice(2, 10),
     name: "Player",
@@ -65,11 +71,13 @@ wss.on("connection", (ws) => {
     color: Math.floor(Math.random() * 360),
     avatar: 0,
     ready: false,
+    lastMoveAt: 0,
     ws,
     room: null,
   };
   send(ws, { type: "connected", id: player.id });
   ws.on("message", (raw) => {
+    if (raw.length > 4096) return;
     let m;
     try {
       m = JSON.parse(raw);
@@ -205,12 +213,23 @@ wss.on("connection", (ws) => {
         });
       }
     } else if (m.type === "move" && player.room) {
+      const now = Date.now();
+      if (now - player.lastMoveAt < 35) return;
+      player.lastMoveAt = now;
       const room = rooms.get(player.room);
-      player.x = Math.max(0, Math.min(960, +m.x || 0));
-      player.y = Math.max(55, Math.min(540, +m.y || 55));
+      player.x = Math.round(Math.max(0, Math.min(960, +m.x || 0)) * 10) / 10;
+      player.y =
+        Math.round(Math.max(55, Math.min(540, +m.y || 55)) * 10) / 10;
       broadcast(
         room,
-        { type: "move", id: player.id, x: player.x, y: player.y },
+        {
+          type: "move",
+          id: player.id,
+          x: player.x,
+          y: player.y,
+          fx: Math.max(-1, Math.min(1, +m.fx || 0)),
+          fy: Math.max(-1, Math.min(1, +m.fy || 0)),
+        },
         ws,
       );
     }
@@ -225,6 +244,14 @@ wss.on("connection", (ws) => {
     if (!room.players.size) rooms.delete(player.room);
   });
 });
+const heartbeat = setInterval(() => {
+  wss.clients.forEach((ws) => {
+    if (ws.isAlive === false) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 20000);
+heartbeat.unref();
 server.listen(PORT, () => console.log(`Neon Fortune listening on ${PORT}`));
 
 const eventTypes = [

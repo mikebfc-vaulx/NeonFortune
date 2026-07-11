@@ -27,6 +27,8 @@ let socket = null,
   myId = null,
   currentRoom = null,
   lastNetworkSend = 0,
+  lastSentX = 480,
+  lastSentY = 440,
   selectedAvatar = 0,
   isReady = false,
   myName = "Player",
@@ -254,7 +256,11 @@ function startRoom(players, economy) {
   remotePlayers.clear();
   players
     .filter((p) => p.id !== myId)
-    .forEach((p) => remotePlayers.set(p.id, p));
+    .forEach((p) => {
+      p.tx = p.x;
+      p.ty = p.y;
+      remotePlayers.set(p.id, p);
+    });
   applyEconomy(economy);
   $("#lobby-screen").classList.add("hidden");
   $("#roomBar").classList.remove("hidden");
@@ -348,7 +354,9 @@ function connectMultiplayer() {
         };
       else {
         const target = remotePlayers.get(m.target);
-        if (target)
+        if (target) {
+          target.tx = m.x;
+          target.ty = m.y;
           target.knock = {
             x0: target.x,
             y0: target.y,
@@ -357,12 +365,17 @@ function connectMultiplayer() {
             start: now,
             duration,
           };
+        }
       }
     } else if (m.type === "move") {
       const p = remotePlayers.get(m.id);
       if (p && !p.knock) {
-        p.x = m.x;
-        p.y = m.y;
+        p.tx = m.x;
+        p.ty = m.y;
+        if (m.fx || m.fy) {
+          p.faceX = m.fx;
+          p.faceY = m.fy;
+        }
       }
     } else if (m.type === "count") $("#onlineCount").textContent = m.count;
   };
@@ -946,6 +959,14 @@ function updateKnockAnimations(now, dt) {
     if (impacts[i].ttl <= 0) impacts.splice(i, 1);
   }
 }
+function updateRemoteInterpolation(dt) {
+  const blend = 1 - Math.exp(-dt * 22);
+  remotePlayers.forEach((p) => {
+    if (p.knock) return;
+    if (Number.isFinite(p.tx)) p.x += (p.tx - p.x) * blend;
+    if (Number.isFinite(p.ty)) p.y += (p.ty - p.y) * blend;
+  });
+}
 function drawImpacts() {
   impacts.forEach((v) => {
     const p = 1 - v.ttl / 0.45;
@@ -1125,6 +1146,7 @@ function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
   last = now;
   updateKnockAnimations(now, dt);
+  updateRemoteInterpolation(dt);
   updateMoneyFx(dt);
   if (globalEvent) {
     const left = Math.max(
@@ -1203,9 +1225,27 @@ function loop(now) {
         player.y + (dy / len) * player.speed * moveModifier * roleSpeed * dt,
       ),
     );
-    if (now - lastNetworkSend > 80 && socket?.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ type: "move", x: player.x, y: player.y }));
+    const movedSinceSend = Math.hypot(
+      player.x - lastSentX,
+      player.y - lastSentY,
+    );
+    if (
+      movedSinceSend > 0.35 &&
+      now - lastNetworkSend > 50 &&
+      socket?.readyState === WebSocket.OPEN
+    ) {
+      socket.send(
+        JSON.stringify({
+          type: "move",
+          x: Math.round(player.x * 10) / 10,
+          y: Math.round(player.y * 10) / 10,
+          fx: Math.round(faceX * 100) / 100,
+          fy: Math.round(faceY * 100) / 100,
+        }),
+      );
       lastNetworkSend = now;
+      lastSentX = player.x;
+      lastSentY = player.y;
     }
     if (pickup && Math.hypot(player.x - pickup.x, player.y - pickup.y) < 30)
       collectLuck();
@@ -1656,8 +1696,8 @@ function fortune() {
     step = 18,
     pos = (i) => {
       const a = (i * step * Math.PI) / 180,
-        r = 108;
-      return `left:${125 + Math.sin(a) * r}px;top:${133 - Math.cos(a) * r}px`;
+        r = 124;
+      return `--label-angle:${i * step}deg;left:${143 + Math.sin(a) * r}px;top:${153 - Math.cos(a) * r}px`;
     };
   base(
     "RUOTA DELLA FORTUNA",
@@ -1776,7 +1816,7 @@ function plinko() {
     },
     medium: {
       name: "MEDIO",
-      mults: [10, 4, 1.6, 1, 0.38, 1, 1.6, 4, 10],
+      mults: [8, 3.2, 1.3, 0.8, 0.3, 0.8, 1.3, 3.2, 8],
     },
     hard: {
       name: "DIFFICILE",
