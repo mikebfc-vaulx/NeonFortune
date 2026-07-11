@@ -1160,14 +1160,16 @@ function luckyCard(hand, dk) {
   dk.splice(chosen.i, 1);
   return chosen.c;
 }
-function nearby() {
-  return stations.find(
-    (s) =>
-      player.x > s.x - 30 &&
-      player.x < s.x + s.w + 30 &&
-      player.y > s.y - 45 &&
-      player.y < s.y + s.h + 45,
+function isNearStation(s) {
+  return (
+    player.x > s.x - 30 &&
+    player.x < s.x + s.w + 30 &&
+    player.y > s.y - 45 &&
+    player.y < s.y + s.h + 45
   );
+}
+function nearby() {
+  return stations.find(isNearStation);
 }
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
@@ -1383,7 +1385,10 @@ canvas.addEventListener("click", (e) => {
   const s = stations.find(
     (s) => x > s.x && x < s.x + s.w && y > s.y && y < s.y + s.h,
   );
-  if (s) openGame(s.id);
+  if (s) {
+    if (isNearStation(s)) openGame(s.id);
+    else toast(`Avvicinati a ${s.name} per giocare`);
+  }
 });
 $("#close").onclick = closeGame;
 $("#modal").addEventListener("click", (e) => {
