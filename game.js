@@ -1307,12 +1307,23 @@ function loop(now) {
     darkness.addColorStop(1, "rgba(0,0,0,1)");
     ctx.fillStyle = darkness;
     ctx.fillRect(0, 0, 960, 540);
+    // Keep the local player and name readable inside the small light radius.
+    drawPlayer();
   } else drawPressure();
   $("#prompt").classList.toggle(
     "hidden",
     !nearby() || modalOpen || globalEvent?.name === "BLACKOUT",
   );
-  requestAnimationFrame(loop);
+  requestAnimationFrame(safeLoop);
+}
+function safeLoop(now) {
+  try {
+    loop(now);
+  } catch (error) {
+    console.error("Frame recovered:", error);
+    last = now;
+    requestAnimationFrame(safeLoop);
+  }
 }
 function advanceLevel() {
   let passed = 0;
@@ -1341,7 +1352,8 @@ function end(reason) {
 }
 
 addEventListener("keydown", (e) => {
-  keys[e.key] = true;
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  keys[key] = true;
   if (e.code === "Space" && !e.repeat && !modalOpen && punchCooldown <= 0) {
     e.preventDefault();
     chargingPunch = true;
@@ -1354,7 +1366,8 @@ addEventListener("keydown", (e) => {
     openGame(nearby().id);
 });
 addEventListener("keyup", (e) => {
-  keys[e.key] = false;
+  const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  keys[key] = false;
   if (e.code === "Space" && chargingPunch) {
     chargingPunch = false;
     $("#chargeMeter").classList.add("hidden");
@@ -2330,4 +2343,4 @@ $("#restart").onclick = () => {
   sync();
 };
 sync();
-requestAnimationFrame(loop);
+requestAnimationFrame(safeLoop);
