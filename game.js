@@ -1249,8 +1249,9 @@ function loop(now) {
 function advanceLevel() {
   let passed = 0;
   while (money >= goal) {
+    const growth = 1.38 + (round - 1) * 0.05;
+    goal = Math.ceil((goal * growth) / 50) * 50;
     round++;
-    goal = Math.ceil((goal * 1.38) / 50) * 50;
     passed++;
   }
   if (passed) {
@@ -1771,7 +1772,7 @@ function plinko() {
   const levels = {
     easy: {
       name: "FACILE",
-      mults: [2.5, 1.8, 1.4, 1.3, 0.78, 1.3, 1.4, 1.8, 2.5],
+      mults: [2.5, 1.8, 1.4, 0.9, 0.78, 0.9, 1.4, 1.8, 2.5],
     },
     medium: {
       name: "MEDIO",
