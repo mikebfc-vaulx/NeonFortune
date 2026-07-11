@@ -222,7 +222,7 @@ function applyEconomy(e, announce = false) {
   $("#comboFill").style.width = `${Math.min(100, teamCombo * 10)}%`;
   if (announce && e.delta > 0) {
     spawnMoneyFx(e.delta);
-    trackMission("win");
+    if (e.outcome === "win") trackMission("win");
     if (teamCombo > oldCombo && teamCombo % 5 === 0)
       toast(`COMBO DI SQUADRA ×${teamCombo}!`);
     if (e.delta >= 500) {
@@ -582,14 +582,18 @@ function toast(msg) {
   clearTimeout(toast.t);
   toast.t = setTimeout(() => t.classList.add("hidden"), 2200);
 }
-function changeMoney(n) {
+function changeMoney(n, outcome = null) {
   if (n > 0 && selectedAvatar === 1) n = Math.floor(n * 1.05);
   if (n > 0 && globalEvent?.name === "HAPPY HOUR") n = Math.floor(n * 1.25);
   if (currentRoom && socket?.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "money", delta: Math.floor(n) }));
+    socket.send(
+      JSON.stringify({ type: "money", delta: Math.floor(n), outcome }),
+    );
     return;
   }
   money = Math.max(0, money + n);
+  if (outcome === "win") teamCombo++;
+  else if (outcome === "loss") teamCombo = 0;
   if (n > 0) {
     spawnMoneyFx(n);
     trackMission("win");
@@ -1212,7 +1216,18 @@ function loop(now) {
   drawMoneyFx();
   if (globalEvent?.name === "BLACKOUT") {
     ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#000";
+    const darkness = ctx.createRadialGradient(
+      player.x,
+      player.y,
+      8,
+      player.x,
+      player.y,
+      58,
+    );
+    darkness.addColorStop(0, "rgba(0,0,0,0.12)");
+    darkness.addColorStop(0.45, "rgba(0,0,0,0.45)");
+    darkness.addColorStop(1, "rgba(0,0,0,1)");
+    ctx.fillStyle = darkness;
     ctx.fillRect(0, 0, 960, 540);
   } else drawPressure();
   $("#prompt").classList.toggle(
@@ -1345,14 +1360,17 @@ function blackjack() {
       win = pv <= 21 && (dv > 21 || pv > dv),
       push = pv === dv && pv <= 21;
     if (push) {
-      changeMoney(b);
+      changeMoney(b, "push");
       q("#result").textContent = "Pareggio: puntata restituita.";
     } else if (win) {
       let pay =
         !doubled && h.length === 2 && pv === 21 ? Math.floor(b * 2.5) : b * 2;
-      changeMoney(pay);
+      changeMoney(pay, "win");
       q("#result").textContent = `Hai vinto ${fmt(pay - b)}!`;
-    } else q("#result").textContent = "Il banco vince.";
+    } else {
+      changeMoney(0, "loss");
+      q("#result").textContent = "Il banco vince.";
+    }
     dealerTurn = false;
     q("#deal").disabled = false;
   };
@@ -1370,6 +1388,7 @@ function blackjack() {
     active = false;
     q("#hit").disabled = q("#double").disabled = q("#stand").disabled = true;
     if (handValue(h) > 21) {
+      changeMoney(0, "loss");
       q("#result").textContent =
         "Hai sballato. Il banco vince senza scoprire le carte.";
       q("#deal").disabled = false;
@@ -1537,7 +1556,7 @@ function roulette() {
         else if (k === "pari" && n > 0 && n % 2 === 0) pay += v * 2;
         else if (k === "dispari" && n % 2 === 1) pay += v * 2;
       });
-      if (pay) changeMoney(pay);
+      changeMoney(pay, pay > total ? "win" : pay < total ? "loss" : "push");
       bets = {};
       total = 0;
       refresh();
@@ -1603,7 +1622,7 @@ function slots() {
                   : counts === 2
                     ? 2
                     : 0;
-            if (mult) changeMoney(b * mult);
+            changeMoney(mult ? b * mult : 0, mult > 1 ? "win" : "loss");
             $("#result").textContent = mult
               ? `Vittoria! ${mult}x — guadagni ${fmt(b * (mult - 1))}.`
               : "Nessuna combinazione.";
@@ -1661,7 +1680,7 @@ function fortune() {
     $("#result").textContent = "La ruota sta girando...";
     setTimeout(() => {
       const pay = Math.max(1, Math.floor(b * prize));
-      changeMoney(pay);
+      changeMoney(pay, pay > b ? "win" : pay < b ? "loss" : "push");
       document
         .querySelector(`[data-wheel-index="${index}"]`)
         .classList.add("wheel-winner");
@@ -1726,7 +1745,7 @@ function dice() {
       const sum = a + d,
         win = wins(sum, pick),
         mult = pick === "seven" ? 5 : 2;
-      if (win) changeMoney(b * mult);
+      changeMoney(win ? b * mult : 0, win ? "win" : "loss");
       $("#result").textContent =
         `${a} + ${d} = ${sum} — ${win ? `vinci ${fmt(b * mult)}` : "il banco vince"}.`;
       rolling = false;
@@ -1764,7 +1783,8 @@ function plinko() {
     resultEl = $("#result"),
     balls = [];
   let risk = "easy",
-    rafId = null;
+    rafId = null,
+    localAvailable = money;
   const draw = () => {
     if (!c.isConnected) return;
     const mults = levels[risk].mults;
@@ -1811,7 +1831,11 @@ function plinko() {
       ball.y = p0.y + (p1.y - p0.y) * f - Math.sin(f * Math.PI) * 8;
       if (t >= 1) {
         const pay = Math.floor(ball.bet * ball.mult);
-        if (pay > 0) changeMoney(pay);
+        localAvailable += pay;
+        changeMoney(
+          pay,
+          pay > ball.bet ? "win" : pay < ball.bet ? "loss" : "push",
+        );
         if (resultEl.isConnected)
           resultEl.textContent =
             `${ball.level}: ${ball.mult}× · ${pay ? `restituzione ${fmt(pay)}` : "pallina persa"}.`;
@@ -1843,10 +1867,16 @@ function plinko() {
       }),
   );
   btn.onclick = () => {
-    const b = betValue();
-    if (!b) return;
+    const requested = Math.floor(Number($("#bet").value));
+    localAvailable = Math.min(localAvailable, money);
+    if (!requested || requested < 10)
+      return toast("Puntata non valida (minimo $10)");
+    if (requested > localAvailable)
+      return toast(`Saldo insufficiente: disponibili ${fmt(localAvailable)}`);
+    const b = requested;
     if (balls.length >= 20)
       return toast("Massimo 20 palline contemporaneamente");
+    localAvailable -= b;
     changeMoney(-b);
     document.querySelectorAll(".risk-pick").forEach((x) => (x.disabled = true));
     let dirs = Array.from({ length: 8 }, () => (Math.random() < 0.5 ? -1 : 1));
@@ -2005,14 +2035,16 @@ function poker() {
       dh = bestHand([...dealer, ...common]),
       cmp = compareScore(ph.score, dh.score);
     if (cmp > 0) {
-      changeMoney(b * 2);
+      changeMoney(b * 2, "win");
       $("#result").textContent = `Hai vinto con ${ph.name}! Banco: ${dh.name}.`;
     } else if (cmp === 0) {
-      changeMoney(b);
+      changeMoney(b, "push");
       $("#result").textContent = `Pareggio: ${ph.name}. Puntata restituita.`;
-    } else
+    } else {
+      changeMoney(0, "loss");
       $("#result").textContent =
         `Il banco vince con ${dh.name}. Tu: ${ph.name}.`;
+    }
     active = false;
     $("#nextStreet").disabled = $("#fold").disabled = true;
     $("#pdeal").disabled = false;
@@ -2124,12 +2156,14 @@ function horses() {
       horses.sort((a, b) => b.pos - a.pos);
       const winner = horses[0].i;
       if (winner === pick) {
-        changeMoney(b * 4);
+        changeMoney(b * 4, "win");
         $("#result").textContent =
           `Vince il cavallo #${winner + 1}! Guadagni ${fmt(b * 3)}.`;
-      } else
+      } else {
+        changeMoney(0, "loss");
         $("#result").textContent =
           `Vince il cavallo #${winner + 1}. La tua puntata è persa.`;
+      }
       running = false;
       document
         .querySelectorAll(".horse-pick")
