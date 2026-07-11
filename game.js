@@ -1761,11 +1761,12 @@ function plinko() {
   const c = $("#plinkoCanvas"),
     g = c.getContext("2d"),
     btn = $("#dropBall"),
+    resultEl = $("#result"),
     balls = [];
   let risk = "easy",
-    animating = false;
+    rafId = null;
   const draw = () => {
-    if (!$("#plinkoCanvas")) return;
+    if (!c.isConnected) return;
     const mults = levels[risk].mults;
     g.fillStyle = "#082b30";
     g.fillRect(0, 0, 520, 285);
@@ -1797,10 +1798,7 @@ function plinko() {
     });
   };
   const animate = (now) => {
-    if (!$("#plinkoCanvas")) {
-      animating = false;
-      return;
-    }
+    rafId = null;
     for (let n = balls.length - 1; n >= 0; n--) {
       const ball = balls[n],
         t = Math.min(1, (now - ball.start) / ball.duration),
@@ -1814,19 +1812,23 @@ function plinko() {
       if (t >= 1) {
         const pay = Math.floor(ball.bet * ball.mult);
         if (pay > 0) changeMoney(pay);
-        $("#result").textContent =
-          `${ball.level}: ${ball.mult}× · ${pay ? `restituzione ${fmt(pay)}` : "pallina persa"}.`;
+        if (resultEl.isConnected)
+          resultEl.textContent =
+            `${ball.level}: ${ball.mult}× · ${pay ? `restituzione ${fmt(pay)}` : "pallina persa"}.`;
         balls.splice(n, 1);
       }
     }
     draw();
-    if (balls.length) requestAnimationFrame(animate);
+    if (balls.length) rafId = requestAnimationFrame(animate);
     else {
-      animating = false;
-      document
-        .querySelectorAll(".risk-pick")
-        .forEach((x) => (x.disabled = false));
+      if (c.isConnected)
+        document
+          .querySelectorAll(".risk-pick")
+          .forEach((x) => (x.disabled = false));
     }
+  };
+  const ensureAnimation = () => {
+    if (rafId === null && balls.length) rafId = requestAnimationFrame(animate);
   };
   document.querySelectorAll(".risk-pick").forEach(
     (x) =>
@@ -1836,8 +1838,7 @@ function plinko() {
         document
           .querySelectorAll(".risk-pick")
           .forEach((y) => y.classList.toggle("selected", y === x));
-        $("#result").textContent =
-          `${levels[risk].name}: moltiplicatori aggiornati.`;
+        resultEl.textContent = `${levels[risk].name}: moltiplicatori aggiornati.`;
         draw();
       }),
   );
@@ -1874,12 +1875,9 @@ function plinko() {
       level: levels[risk].name,
       color: colors[balls.length % colors.length],
     });
-    $("#result").textContent =
+    resultEl.textContent =
       `${balls.length} pallin${balls.length === 1 ? "a" : "e"} in gioco...`;
-    if (!animating) {
-      animating = true;
-      requestAnimationFrame(animate);
-    }
+    ensureAnimation();
   };
   draw();
 }
