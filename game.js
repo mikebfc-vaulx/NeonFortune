@@ -1771,15 +1771,15 @@ function plinko() {
   const levels = {
     easy: {
       name: "FACILE",
-      mults: [2, 1.4, 1.1, 1, 0.65, 1, 1.1, 1.4, 2],
+      mults: [2.5, 1.8, 1.4, 1.3, 0.78, 1.3, 1.4, 1.8, 2.5],
     },
     medium: {
       name: "MEDIO",
-      mults: [8, 3, 1.2, 0.75, 0.35, 0.75, 1.2, 3, 8],
+      mults: [10, 4, 1.6, 1, 0.38, 1, 1.6, 4, 10],
     },
     hard: {
       name: "DIFFICILE",
-      mults: [30, 9, 0.5, 0.1, 0, 0.1, 0.5, 9, 30],
+      mults: [30, 9, 0.9, 0.4, 0.2, 0.4, 0.9, 9, 30],
     },
   };
   base(
@@ -1881,7 +1881,7 @@ function plinko() {
     lastLaunch = performance.now();
     btn.disabled = true;
     const cooldown = setInterval(() => {
-      const remaining = Math.max(0, 1000 - (performance.now() - lastLaunch));
+      const remaining = Math.max(0, 500 - (performance.now() - lastLaunch));
       if (btn.isConnected)
         btn.textContent = remaining > 0 ? `ATTENDI ${(remaining / 1000).toFixed(1)}s` : "LANCIA PALLINA";
       if (remaining <= 0 || !btn.isConnected) {
@@ -1910,8 +1910,8 @@ function plinko() {
     if (requested > localAvailable)
       return toast(`Saldo insufficiente: disponibili ${fmt(localAvailable)}`);
     const b = requested;
-    if (performance.now() - lastLaunch < 1000)
-      return toast("Puoi lanciare una pallina al secondo");
+    if (performance.now() - lastLaunch < 500)
+      return toast("Puoi lanciare una pallina ogni mezzo secondo");
     if (balls.length >= 10)
       return toast("Massimo 10 palline contemporaneamente");
     localAvailable -= b;
