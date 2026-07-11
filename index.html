@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neon Fortune Casino</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="lobby-screen" class="lobby-screen">
+    <section class="lobby-card">
+      <div class="lobby-logo">◆ NEON FORTUNE</div>
+      <h1>MULTIPLAYER CASINO</h1>
+      <p>Crea una sala privata o entra con il codice di un amico.</p>
+      <label>NOME GIOCATORE<input id="playerName" maxlength="14" placeholder="High Roller"></label>
+      <div class="avatar-picker"><span>AVATAR</span><button class="avatar-choice selected" data-avatar="0">🎩</button><button class="avatar-choice" data-avatar="1">👑</button><button class="avatar-choice" data-avatar="2">🤠</button><button class="avatar-choice" data-avatar="3">🤡</button></div>
+      <div id="lobbyEntry" class="lobby-actions"><button id="createRoom">CREA LOBBY</button><span>OPPURE</span><div class="join-row"><input id="roomCode" maxlength="6" placeholder="CODICE"><button id="joinRoom">ENTRA</button></div></div>
+      <div id="waitingRoom" class="waiting-room hidden"><h2>LOBBY <strong id="waitingCode">------</strong></h2><div id="lobbyPlayers"></div><button id="readyButton">SONO PRONTO</button><small>La partita parte quando tutti sono pronti.</small></div>
+      <p id="lobbyStatus" class="lobby-status">Connessione al casinò...</p>
+    </section>
+  </div>
+  <main id="game-shell">
+    <header class="hud">
+      <div class="brand"><span>◆</span> NEON FORTUNE</div>
+      <div class="stat"><small>SALDO</small><strong id="money">$1.000</strong></div>
+      <div class="stat target"><small>OBIETTIVO #<span id="round">1</span></small><strong id="goal">$1.300</strong></div>
+      <div class="stat timer"><small>TEMPO</small><strong id="timer">05:00</strong></div>
+      <div id="luckHud" class="luck-hud hidden"><small id="effectLabel">EFFETTO</small><strong id="luckValue">?</strong><span id="luckTimer">0s</span></div>
+      <button id="sound" aria-label="Audio">♪</button>
+    </header>
+    <div id="roomBar" class="room-bar hidden">LOBBY <strong id="currentRoom">------</strong> · <span id="onlineCount">1</span> GIOCATORI <button id="copyRoom">COPIA CODICE</button></div>
+
+    <section class="casino-wrap">
+      <canvas id="casino" width="960" height="540" aria-label="Sala del casinò"></canvas>
+      <div id="prompt" class="prompt hidden">Premi <b>E</b> per giocare</div>
+      <div class="controls">WASD / FRECCE: muoviti · E: gioca · SPAZIO: pugno · oppure clicca un tavolo</div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <section class="game-panel">
+      <button id="close" class="close">×</button>
+      <div id="game-content"></div>
+    </section>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+  <div id="end-screen" class="end-screen hidden">
+    <div class="end-card">
+      <div class="skull">♠</div>
+      <h1>FORTUNA FINITA</h1>
+      <p id="end-reason"></p>
+      <button id="restart">RIPROVA</button>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+</html>
