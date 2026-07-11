@@ -5,6 +5,7 @@ const { WebSocketServer, WebSocket } = require("ws");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
+const MAX_ECONOMY = 1e300;
 const rooms = new Map();
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -152,18 +153,24 @@ wss.on("connection", (ws) => {
         });
     } else if (m.type === "money" && player.room) {
       const room = rooms.get(player.room),
-        delta = Math.max(
-          -1000000,
-          Math.min(1000000, Math.floor(+m.delta || 0)),
-        ),
+        requestedDelta = Number(m.delta),
+        delta = Number.isFinite(requestedDelta)
+          ? Math.trunc(
+              Math.max(-MAX_ECONOMY, Math.min(MAX_ECONOMY, requestedDelta)),
+            )
+          : 0,
         oldRound = room.round;
-      room.money = Math.max(0, room.money + delta);
+      room.money = Math.min(MAX_ECONOMY, Math.max(0, room.money + delta));
       if (m.outcome === "win") room.combo++;
       else if (m.outcome === "loss") room.combo = 0;
       while (room.money >= room.goal) {
         const growth = 1.38 + (room.round - 1) * 0.05;
-        room.goal = Math.ceil((room.goal * growth) / 50) * 50;
+        room.goal = Math.min(
+          MAX_ECONOMY,
+          Math.ceil((room.goal * growth) / 50) * 50,
+        );
         room.round++;
+        if (room.goal >= MAX_ECONOMY) break;
       }
       broadcast(room, {
         type: "economy",

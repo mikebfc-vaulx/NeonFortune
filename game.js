@@ -587,7 +587,34 @@ addEventListener("pointerdown", startMusic, { once: true });
 addEventListener("keydown", startMusic, { once: true });
 
 function fmt(n) {
-  return "$" + Math.floor(n).toLocaleString("it-IT");
+  n = Number(n);
+  if (!Number.isFinite(n)) return "$∞";
+  const sign = n < 0 ? "-" : "",
+    value = Math.abs(n);
+  if (value < 10000000)
+    return `${sign}$${Math.floor(value).toLocaleString("it-IT")}`;
+  const suffixes = [
+      "m",
+      "b",
+      "t",
+      "qa",
+      "qi",
+      "sx",
+      "sp",
+      "oc",
+      "no",
+      "dc",
+      "ud",
+      "dd",
+      "td",
+      "qd",
+      "qid",
+    ],
+    group = Math.floor(Math.log10(value) / 3),
+    suffix = suffixes[group - 2];
+  if (!suffix) return `${sign}$${value.toExponential(2).replace(".", ",")}`;
+  const compact = (value / Math.pow(1000, group)).toFixed(2).replace(".", ",");
+  return `${sign}$${compact}${suffix}`;
 }
 function sync() {
   moneyEl.textContent = fmt(money);
@@ -1198,6 +1225,7 @@ function loop(now) {
             : "LENTO";
       $("#luckTimer").textContent = `${Math.ceil(activeTime)}s`;
     }
+    updateMiniEffect();
   }
   if (playing && !modalOpen) {
     let dx =
@@ -1293,6 +1321,7 @@ function advanceLevel() {
     goal = Math.ceil((goal * growth) / 50) * 50;
     round++;
     passed++;
+    if (!Number.isFinite(goal)) break;
   }
   if (passed) {
     timeLeft = 300;
@@ -1358,8 +1387,32 @@ function openGame(id) {
   ({ blackjack, roulette, horses, slots, fortune, dice, plinko })[id]();
 }
 function base(title, sub, body) {
+  const activeEffect = effectSummary();
   $("#game-content").innerHTML =
-    `<div class="mini-balance"><span>SALDO DISPONIBILE</span><strong id="miniBalance">${fmt(money)}</strong></div><h2 class="game-title">${title}</h2><p class="subtitle">${sub}</p>${body}`;
+    `<div class="mini-balance"><span>SALDO DISPONIBILE</span><strong id="miniBalance">${fmt(money)}</strong></div><div id="miniEffect" class="mini-effect ${activeEffect ? "" : "hidden"}"><span>EFFETTI ATTIVI</span><strong>${activeEffect}</strong></div><h2 class="game-title">${title}</h2><p class="subtitle">${sub}</p>${body}`;
+}
+function effectSummary() {
+  const effects = [];
+  if (luckTime > 0)
+    effects.push(
+      `${effectName} ${luckBoost > 0 ? "+" : ""}${Math.round(luckBoost * 100)}% · ${Math.ceil(luckTime)}s`,
+    );
+  if (moveModifierTime > 0)
+    effects.push(
+      `${moveModifier > 1 ? "TURBO" : "LENTEZZA"} · ${Math.ceil(moveModifierTime)}s`,
+    );
+  if (globalEvent) {
+    const seconds = Math.max(0, Math.ceil((globalEvent.endsAt - Date.now()) / 1000));
+    effects.push(`${globalEvent.name} · ${seconds}s`);
+  }
+  return effects.join(" | ");
+}
+function updateMiniEffect() {
+  const badge = $("#miniEffect");
+  if (!badge) return;
+  const summary = effectSummary();
+  badge.classList.toggle("hidden", !summary);
+  if (summary) badge.querySelector("strong").textContent = summary;
 }
 function cardHTML(c) {
   if (c === "?") return '<div class="card back">◆</div>';
@@ -1728,6 +1781,9 @@ function fortune() {
       nextFullTurn = Math.floor(rotation / 360) + 6;
     rotation = nextFullTurn * 360 - index * step;
     disc.style.transform = `rotate(${rotation}deg)`;
+    document.querySelectorAll("[data-wheel-index]").forEach((label) => {
+      label.style.setProperty("--counter-rotation", `${-rotation}deg`);
+    });
     $("#result").textContent = "La ruota sta girando...";
     setTimeout(() => {
       const pay = Math.max(1, Math.floor(b * prize));
