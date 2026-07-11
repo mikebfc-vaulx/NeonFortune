@@ -42,7 +42,9 @@ const impacts = [],
 let playerKnock = null,
   teamCombo = 0,
   globalEvent = null,
-  localEmote = null;
+  localEmote = null,
+  pendingOutcomes = 0,
+  bankruptcyTimer = null;
 const missions = [
   { name: "Raccogli 2 misteri", type: "collect", goal: 2 },
   { name: "Colpisci 5 personaggi", type: "punch", goal: 5 },
@@ -237,8 +239,16 @@ function applyEconomy(e, announce = false) {
       toast(`${e.actor || "La squadra"} ha raggiunto il livello ${round}!`);
   }
   sync();
-  if (money <= 0 && playing)
-    end("Il budget condiviso è terminato. Il casinò vince.");
+  if (money > 0) {
+    clearTimeout(bankruptcyTimer);
+    bankruptcyTimer = null;
+  } else if (playing && pendingOutcomes === 0 && !bankruptcyTimer) {
+    bankruptcyTimer = setTimeout(() => {
+      bankruptcyTimer = null;
+      if (money <= 0 && pendingOutcomes === 0 && playing)
+        end("Il budget condiviso è terminato. Il casinò vince.");
+    }, 1200);
+  }
 }
 function startRoom(players, economy) {
   remotePlayers.clear();
@@ -1784,7 +1794,8 @@ function plinko() {
     balls = [];
   let risk = "easy",
     rafId = null,
-    localAvailable = money;
+    localAvailable = money,
+    lastLaunch = 0;
   const draw = () => {
     if (!c.isConnected) return;
     const mults = levels[risk].mults;
@@ -1840,6 +1851,14 @@ function plinko() {
           resultEl.textContent =
             `${ball.level}: ${ball.mult}× · ${pay ? `restituzione ${fmt(pay)}` : "pallina persa"}.`;
         balls.splice(n, 1);
+        pendingOutcomes = Math.max(0, pendingOutcomes - 1);
+        if (pendingOutcomes === 0 && money <= 0 && !bankruptcyTimer) {
+          bankruptcyTimer = setTimeout(() => {
+            bankruptcyTimer = null;
+            if (money <= 0 && pendingOutcomes === 0 && playing)
+              end("Il budget condiviso è terminato. Il casinò vince.");
+          }, 1500);
+        }
       }
     }
     draw();
@@ -1853,6 +1872,23 @@ function plinko() {
   };
   const ensureAnimation = () => {
     if (rafId === null && balls.length) rafId = requestAnimationFrame(animate);
+  };
+  const watchdog = setInterval(() => {
+    if (balls.length && rafId === null) ensureAnimation();
+    if (!c.isConnected && balls.length === 0) clearInterval(watchdog);
+  }, 200);
+  const beginLaunchCooldown = () => {
+    lastLaunch = performance.now();
+    btn.disabled = true;
+    const cooldown = setInterval(() => {
+      const remaining = Math.max(0, 1000 - (performance.now() - lastLaunch));
+      if (btn.isConnected)
+        btn.textContent = remaining > 0 ? `ATTENDI ${(remaining / 1000).toFixed(1)}s` : "LANCIA PALLINA";
+      if (remaining <= 0 || !btn.isConnected) {
+        clearInterval(cooldown);
+        if (btn.isConnected) btn.disabled = false;
+      }
+    }, 100);
   };
   document.querySelectorAll(".risk-pick").forEach(
     (x) =>
@@ -1874,9 +1910,13 @@ function plinko() {
     if (requested > localAvailable)
       return toast(`Saldo insufficiente: disponibili ${fmt(localAvailable)}`);
     const b = requested;
-    if (balls.length >= 20)
-      return toast("Massimo 20 palline contemporaneamente");
+    if (performance.now() - lastLaunch < 1000)
+      return toast("Puoi lanciare una pallina al secondo");
+    if (balls.length >= 10)
+      return toast("Massimo 10 palline contemporaneamente");
     localAvailable -= b;
+    pendingOutcomes++;
+    beginLaunchCooldown();
     changeMoney(-b);
     document.querySelectorAll(".risk-pick").forEach((x) => (x.disabled = true));
     let dirs = Array.from({ length: 8 }, () => (Math.random() < 0.5 ? -1 : 1));
