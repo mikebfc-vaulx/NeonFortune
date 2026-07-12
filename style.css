@@ -70,7 +70,7 @@ body:after {
 }
 .lobby-ad > span,
 .lobby-ad-mobile > span {
-  display: block;
+  display: none;
   margin-bottom: 6px;
   color: #817990;
   font-size: 8px;
@@ -337,22 +337,35 @@ body:after {
 .ad-rail {
   display: none;
   width: 170px;
-  min-height: 280px;
+  min-height: 0;
   margin: 118px auto 0;
-  padding: 8px;
+  padding: 0;
   color: #958aa8;
-  border: 1px solid #3d315d;
-  background: #100d20aa;
+  border: 0;
+  background: transparent;
   font-size: 9px;
   text-align: center;
 }
 .ad-rail > span {
-  display: block;
+  display: none;
   margin-bottom: 7px;
   color: #817990;
   font-size: 8px;
   letter-spacing: 1px;
   text-transform: uppercase;
+}
+.ad-rail:has(ins[data-ad-status="filled"]) {
+  min-height: 280px;
+  padding: 8px;
+  border: 1px solid #3d315d;
+  background: #100d20aa;
+}
+.ad-rail:has(ins[data-ad-status="filled"]) > span {
+  display: block;
+}
+ins.adsbygoogle[data-ad-status="unfilled"],
+ins.adsbygoogle[data-ad-status="unfill-optimized"] {
+  display: none !important;
 }
 .mobile-ad-rail {
   display: none;
@@ -374,11 +387,18 @@ body:after {
   .lobby-ad {
     display: block;
     width: 170px;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .lobby-ad:has(ins[data-ad-status="filled"]) {
     min-height: 280px;
     padding: 8px;
     border: 1px solid #3d315d;
     background: #100d20aa;
   }
+  .lobby-ad:has(ins[data-ad-status="filled"]) > span { display: block; }
   .lobby-ad-left { grid-column: 1; justify-self: center; }
   .lobby-ad-right { grid-column: 3; justify-self: center; }
 }
@@ -1105,11 +1125,11 @@ button,
   .ad-rail { display: none !important; }
   .mobile-ad-rail {
     display: block;
-    margin: 2px 3px;
-    padding: 2px 4px;
+    margin: 0 3px;
+    padding: 0;
     color: #817990;
-    border: 1px solid #3d315d;
-    background: #100d20aa;
+    border: 0;
+    background: transparent;
     font-size: 7px;
     text-align: center;
     text-transform: uppercase;
@@ -1125,16 +1145,30 @@ button,
     display: block;
     order: -1;
     width: min(92vw, 540px);
-    margin: 0 auto 5px;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .mobile-ad-rail > span {
+    display: none;
+    margin-bottom: 2px;
+    letter-spacing: 1px;
+  }
+  .mobile-ad-rail:has(ins[data-ad-status="filled"]) {
+    margin: 2px 3px;
+    padding: 2px 4px;
+    border: 1px solid #3d315d;
+    background: #100d20aa;
+  }
+  .mobile-ad-rail:has(ins[data-ad-status="filled"]) > span { display: block; }
+  .lobby-ad-mobile:has(ins[data-ad-status="filled"]) {
+    margin-bottom: 5px;
     padding: 3px;
     border: 1px solid #3d315d;
     background: #100d20aa;
   }
-  .mobile-ad-rail > span {
-    display: block;
-    margin-bottom: 2px;
-    letter-spacing: 1px;
-  }
+  .lobby-ad-mobile:has(ins[data-ad-status="filled"]) > span { display: block; }
   .mobile-ad-rail:has(ins[data-ad-status="unfilled"]) {
     display: none;
   }
