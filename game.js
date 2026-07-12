@@ -79,11 +79,90 @@ const lobbyStatusLocale = {
   de:{"Connessione al casinò...":"Verbindung zum Casino...","Connesso. Crea o raggiungi una lobby.":"Verbunden. Erstelle eine Lobby oder tritt bei.","Connessione persa. Riconnessione...":"Verbindung verloren. Neu verbinden...","Scegli Pronto quando vuoi iniziare.":"Wähle Bereit, wenn du starten möchtest.","Connessione al server non disponibile":"Serververbindung nicht verfügbar","Inserisci il codice della lobby":"Lobby-Code eingeben","Creazione lobby...":"Lobby wird erstellt...","Accesso alla lobby...":"Lobby wird betreten..."},
   es:{"Connessione al casinò...":"Conectando con el casino...","Connesso. Crea o raggiungi una lobby.":"Conectado. Crea una sala o únete a una.","Connessione persa. Riconnessione...":"Conexión perdida. Reconectando...","Scegli Pronto quando vuoi iniziare.":"Pulsa Listo cuando quieras comenzar.","Connessione al server non disponibile":"Conexión con el servidor no disponible","Inserisci il codice della lobby":"Introduce el código de la sala","Creazione lobby...":"Creando sala...","Accesso alla lobby...":"Entrando en la sala..."}
 };
+const dynamicPhraseLocale = {
+  en: [
+    ["Missione completata", "Mission complete"], ["EVENTO:", "EVENT:"], [" per ", " for "],
+    ["PIOGGIA DI FICHES", "CHIP RAIN"], ["MODALITÀ CAOS", "CHAOS MODE"], ["TAVOLO CHIUSO", "TABLE CLOSED"],
+    ["GIOCO TEMPORANEAMENTE BLOCCATO", "GAME TEMPORARILY LOCKED"], ["Il tavolo riapre tra", "The table reopens in"],
+    ["COMBO DI SQUADRA", "TEAM COMBO"], ["La squadra", "The team"], ["ha raggiunto il livello", "reached level"],
+    ["Lobby avviata: tutti pronti!", "Lobby started: everyone is ready!"], ["Codice lobby copiato!", "Lobby code copied!"],
+    ["Link invito copiato!", "Invite link copied!"], ["Puntata non valida", "Invalid bet"],
+    ["Il bot ha lasciato cadere un oggetto misterioso!", "The bot dropped a mystery item!"],
+    ["FORTUNA", "LUCK"], ["SFORTUNA", "BAD LUCK"], ["DONAZIONE LIVELLO", "LEVEL DONATION"],
+    ["RAZZIA LIVELLO", "LEVEL RAID"], ["TEMPO EXTRA", "EXTRA TIME"], ["TEMPO RUBATO", "TIME STOLEN"],
+    ["LENTEZZA", "SLOWDOWN"], ["Livello", "Level"], ["Nuovo obiettivo", "New target"],
+    ["Avvicinati a un tavolo", "Move closer to a table"], ["Avvicinati a", "Move closer to"],
+    ["per giocare", "to play"], ["è temporaneamente chiuso", "is temporarily closed"],
+    ["Saldo insufficiente per questa fiche", "Insufficient balance for this chip"], ["Piazza almeno una fiche", "Place at least one chip"],
+    ["Attendi che le palline atterrino", "Wait for the balls to land"], ["Saldo insufficiente: disponibili", "Insufficient balance: available"],
+    ["Puoi lanciare una pallina ogni mezzo secondo", "You can drop one ball every half second"],
+    ["Massimo 10 palline contemporaneamente", "Maximum 10 balls at once"], ["ATTENDI", "WAIT"],
+    ["pallina ogni mezzo secondo", "ball every half second"], ["moltiplicatori aggiornati", "multipliers updated"]
+  ],
+  fr: [
+    ["Missione completata", "Mission accomplie"], ["EVENTO:", "ÉVÉNEMENT :"], [" per ", " pendant "],
+    ["PIOGGIA DI FICHES", "PLUIE DE JETONS"], ["MODALITÀ CAOS", "MODE CHAOS"], ["TAVOLO CHIUSO", "TABLE FERMÉE"],
+    ["GIOCO TEMPORANEAMENTE BLOCCATO", "JEU TEMPORAIREMENT BLOQUÉ"], ["Il tavolo riapre tra", "La table rouvre dans"],
+    ["COMBO DI SQUADRA", "COMBO D'ÉQUIPE"], ["La squadra", "L'équipe"], ["ha raggiunto il livello", "a atteint le niveau"],
+    ["Lobby avviata: tutti pronti!", "Salon lancé : tout le monde est prêt !"], ["Codice lobby copiato!", "Code du salon copié !"],
+    ["Link invito copiato!", "Lien d'invitation copié !"], ["Puntata non valida", "Mise invalide"],
+    ["Il bot ha lasciato cadere un oggetto misterioso!", "Le bot a laissé tomber un objet mystère !"],
+    ["FORTUNA", "CHANCE"], ["SFORTUNA", "MALCHANCE"], ["DONAZIONE LIVELLO", "DON DU NIVEAU"],
+    ["RAZZIA LIVELLO", "RAID DU NIVEAU"], ["TEMPO EXTRA", "TEMPS SUPPLÉMENTAIRE"], ["TEMPO RUBATO", "TEMPS VOLÉ"],
+    ["LENTEZZA", "RALENTISSEMENT"], ["Livello", "Niveau"], ["Nuovo obiettivo", "Nouvel objectif"],
+    ["Avvicinati a un tavolo", "Approchez-vous d'une table"], ["Avvicinati a", "Approchez-vous de"],
+    ["per giocare", "pour jouer"], ["è temporaneamente chiuso", "est temporairement fermé"],
+    ["Saldo insufficiente per questa fiche", "Solde insuffisant pour ce jeton"], ["Piazza almeno una fiche", "Placez au moins un jeton"],
+    ["Attendi che le palline atterrino", "Attendez que les balles atterrissent"], ["Saldo insufficiente: disponibili", "Solde insuffisant : disponible"],
+    ["Puoi lanciare una pallina ogni mezzo secondo", "Vous pouvez lancer une balle toutes les demi-secondes"],
+    ["Massimo 10 palline contemporaneamente", "Maximum 10 balles à la fois"], ["ATTENDI", "ATTENDEZ"],
+    ["moltiplicatori aggiornati", "multiplicateurs mis à jour"]
+  ],
+  de: [
+    ["Missione completata", "Mission abgeschlossen"], ["EVENTO:", "EREIGNIS:"], [" per ", " für "],
+    ["PIOGGIA DI FICHES", "CHIP-REGEN"], ["MODALITÀ CAOS", "CHAOSMODUS"], ["TAVOLO CHIUSO", "TISCH GESCHLOSSEN"],
+    ["GIOCO TEMPORANEAMENTE BLOCCATO", "SPIEL VORÜBERGEHEND GESPERRT"], ["Il tavolo riapre tra", "Der Tisch öffnet wieder in"],
+    ["COMBO DI SQUADRA", "TEAM-KOMBO"], ["La squadra", "Das Team"], ["ha raggiunto il livello", "hat Level erreicht"],
+    ["Lobby avviata: tutti pronti!", "Lobby gestartet: Alle sind bereit!"], ["Codice lobby copiato!", "Lobby-Code kopiert!"],
+    ["Link invito copiato!", "Einladungslink kopiert!"], ["Puntata non valida", "Ungültiger Einsatz"],
+    ["Il bot ha lasciato cadere un oggetto misterioso!", "Der Bot hat einen geheimnisvollen Gegenstand fallen lassen!"],
+    ["FORTUNA", "GLÜCK"], ["SFORTUNA", "PECH"], ["DONAZIONE LIVELLO", "LEVEL-SPENDE"],
+    ["RAZZIA LIVELLO", "LEVEL-RAUB"], ["TEMPO EXTRA", "EXTRAZEIT"], ["TEMPO RUBATO", "GESTOHLENE ZEIT"],
+    ["LENTEZZA", "VERLANGSAMUNG"], ["Livello", "Level"], ["Nuovo obiettivo", "Neues Ziel"],
+    ["Avvicinati a un tavolo", "Gehe näher an einen Tisch"], ["Avvicinati a", "Gehe näher an"],
+    ["per giocare", "zum Spielen"], ["è temporaneamente chiuso", "ist vorübergehend geschlossen"],
+    ["Saldo insufficiente per questa fiche", "Guthaben für diesen Chip nicht ausreichend"], ["Piazza almeno una fiche", "Setze mindestens einen Chip"],
+    ["Attendi che le palline atterrino", "Warte, bis die Kugeln gelandet sind"], ["Saldo insufficiente: disponibili", "Guthaben unzureichend: verfügbar"],
+    ["Puoi lanciare una pallina ogni mezzo secondo", "Du kannst alle halbe Sekunde eine Kugel werfen"],
+    ["Massimo 10 palline contemporaneamente", "Maximal 10 Kugeln gleichzeitig"], ["ATTENDI", "WARTE"],
+    ["moltiplicatori aggiornati", "Multiplikatoren aktualisiert"]
+  ],
+  es: [
+    ["Missione completata", "Misión completada"], ["EVENTO:", "EVENTO:"], [" per ", " durante "],
+    ["PIOGGIA DI FICHES", "LLUVIA DE FICHAS"], ["MODALITÀ CAOS", "MODO CAOS"], ["TAVOLO CHIUSO", "MESA CERRADA"],
+    ["GIOCO TEMPORANEAMENTE BLOCCATO", "JUEGO BLOQUEADO TEMPORALMENTE"], ["Il tavolo riapre tra", "La mesa vuelve a abrir en"],
+    ["COMBO DI SQUADRA", "COMBO DE EQUIPO"], ["La squadra", "El equipo"], ["ha raggiunto il livello", "alcanzó el nivel"],
+    ["Lobby avviata: tutti pronti!", "Sala iniciada: ¡todos listos!"], ["Codice lobby copiato!", "¡Código de sala copiado!"],
+    ["Link invito copiato!", "¡Enlace de invitación copiado!"], ["Puntata non valida", "Apuesta no válida"],
+    ["Il bot ha lasciato cadere un oggetto misterioso!", "¡El bot soltó un objeto misterioso!"],
+    ["FORTUNA", "SUERTE"], ["SFORTUNA", "MALA SUERTE"], ["DONAZIONE LIVELLO", "DONACIÓN DE NIVEL"],
+    ["RAZZIA LIVELLO", "SAQUEO DE NIVEL"], ["TEMPO EXTRA", "TIEMPO EXTRA"], ["TEMPO RUBATO", "TIEMPO ROBADO"],
+    ["LENTEZZA", "LENTITUD"], ["Livello", "Nivel"], ["Nuovo obiettivo", "Nuevo objetivo"],
+    ["Avvicinati a un tavolo", "Acércate a una mesa"], ["Avvicinati a", "Acércate a"],
+    ["per giocare", "para jugar"], ["è temporaneamente chiuso", "está cerrada temporalmente"],
+    ["Saldo insufficiente per questa fiche", "Saldo insuficiente para esta ficha"], ["Piazza almeno una fiche", "Coloca al menos una ficha"],
+    ["Attendi che le palline atterrino", "Espera a que caigan las bolas"], ["Saldo insufficiente: disponibili", "Saldo insuficiente: disponible"],
+    ["Puoi lanciare una pallina ogni mezzo secondo", "Puedes lanzar una bola cada medio segundo"],
+    ["Massimo 10 palline contemporaneamente", "Máximo 10 bolas a la vez"], ["ATTENDI", "ESPERA"],
+    ["moltiplicatori aggiornati", "multiplicadores actualizados"]
+  ]
+};
 function localizeLive(value) {
   if (currentLanguage === "it") return value;
   const exact = lobbyStatusLocale[currentLanguage]?.[value];
   if (exact) return exact;
-  return (liveLocale[currentLanguage] || []).reduce((text, pair) => text.replaceAll(pair[0], pair[1]), value);
+  return [...(liveLocale[currentLanguage] || []), ...(dynamicPhraseLocale[currentLanguage] || [])]
+    .reduce((text, pair) => text.replaceAll(pair[0], pair[1]), value);
 }
 function localizeDynamicElement(element) {
   if (!element) return;
@@ -117,7 +196,11 @@ function setLanguage(lang) {
   set(".lobby-card > p:not(.lobby-status)", t.intro);
   const nameLabel = $("#playerName")?.parentElement?.childNodes[0]; if (nameLabel) nameLabel.nodeValue = t.player;
   set(".avatar-picker > span", t.avatar); set("#createRoom", t.create); set("#lobbyEntry > span", t.or);
-  $("#roomCode").placeholder = t.code; set("#joinRoom", t.join); set("#readyButton", t.ready); set("#waitingRoom small", t.waiting);
+  $("#roomCode").placeholder = t.code; set("#joinRoom", t.join);
+  set("#readyButton", isReady
+    ? ({it:"ANNULLA PRONTO",en:"CANCEL READY",fr:"ANNULER PRÊT",de:"BEREIT AUFHEBEN",es:"CANCELAR LISTO"}[lang])
+    : t.ready);
+  set("#waitingRoom small", t.waiting);
   set(".virtual-money-notice strong", t.virtualTitle); set(".virtual-money-notice span", t.virtualText); set('.legal-links a[href="terms.html"]', t.terms);
   set(".stat:not(.target):not(.timer) small", t.balance); const target = $(".stat.target small")?.childNodes[0]; if (target) target.nodeValue = `${t.objective} #`;
   set(".stat.timer small", t.time); set("#copyRoom", t.copy); set("#leaveRoom", t.back); set(".controls", t.controls);
@@ -133,6 +216,7 @@ function setLanguage(lang) {
   if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
   if (typeof lobbyRoster !== "undefined") renderLobby();
   if (typeof selectedAvatar !== "undefined") setRole();
+  if (typeof updateGameLock === "function") updateGameLock();
   refreshDynamicLanguage();
   if (typeof activeGameId !== "undefined" && activeGameId && modalOpen) {
     const localized = gameLocale[lang]?.[activeGameId];
@@ -306,11 +390,11 @@ function renderLobby() {
 }
 function setRole() {
   const roles = {
-    it:["FORTUNATO +5%","BANCHIERE +5%","CORRIDORE +15%","PICCHIATORE +25%"],
-    en:["LUCKY +5%","BANKER +5%","RUNNER +15%","BRAWLER +25%"],
-    fr:["CHANCEUX +5%","BANQUIER +5%","COUREUR +15%","BAGARREUR +25%"],
-    de:["GLÜCKSPILZ +5%","BANKIER +5%","LÄUFER +15%","SCHLÄGER +25%"],
-    es:["AFORTUNADO +5%","BANQUERO +5%","CORREDOR +15%","LUCHADOR +25%"]
+    it:["FORTUNATO +5%","BANCHIERE +5%","CORRIDORE +15% · TEMPO+","PICCHIATORE +25% · DROP +10%"],
+    en:["LUCKY +5%","BANKER +5%","RUNNER +15% · TIME+","BRAWLER +25% · DROP +10%"],
+    fr:["CHANCEUX +5%","BANQUIER +5%","COUREUR +15% · TEMPS+","BAGARREUR +25% · DROP +10%"],
+    de:["GLÜCKSPILZ +5%","BANKIER +5%","LÄUFER +15% · ZEIT+","SCHLÄGER +25% · DROP +10%"],
+    es:["AFORTUNADO +5%","BANQUERO +5%","CORREDOR +15% · TIEMPO+","LUCHADOR +25% · DROP +10%"]
   }[currentLanguage];
   $("#roleName").textContent = roles[selectedAvatar];
 }
@@ -372,7 +456,7 @@ function updateGameLock() {
   const lock = old || document.createElement("div");
   lock.id = "gameEventLock";
   lock.className = "game-event-lock";
-  lock.innerHTML = `<div><strong>🚫 ${blockedGameName(activeGameId)}</strong><span>GIOCO TEMPORANEAMENTE BLOCCATO</span><small>Il tavolo riapre tra <b id="gameLockTime">25</b>s</small></div>`;
+  lock.innerHTML = `<div><strong>🚫 ${blockedGameName(activeGameId)}</strong><span>${localizeLive("GIOCO TEMPORANEAMENTE BLOCCATO")}</span><small>${localizeLive("Il tavolo riapre tra")} <b id="gameLockTime">25</b>s</small></div>`;
   if (!old) $(".game-panel").appendChild(lock);
 }
 function spawnMoneyFx(amount) {
@@ -664,7 +748,8 @@ $("#copyInvite").onclick = () => copyLobbyText($("#inviteLink").value, "Link inv
 $("#readyButton").onclick = () => {
   if (!currentRoom) return;
   isReady = !isReady;
-  $("#readyButton").textContent = isReady ? "ANNULLA PRONTO" : "SONO PRONTO";
+  const cancelReady = { it:"ANNULLA PRONTO", en:"CANCEL READY", fr:"ANNULER PRÊT", de:"BEREIT AUFHEBEN", es:"CANCELAR LISTO" };
+  $("#readyButton").textContent = isReady ? cancelReady[currentLanguage] : translations[currentLanguage].ready;
   $("#readyButton").classList.toggle("is-ready", isReady);
   socket.send(JSON.stringify({ type: "ready", ready: isReady }));
 };
@@ -1225,7 +1310,8 @@ function punch(strength = 0) {
       void $(".casino-wrap").offsetWidth;
       $(".casino-wrap").classList.add("shake");
     }
-    if (Math.random() < 0.25) {
+    const mysteryDropChance = selectedAvatar === 3 ? 0.35 : 0.25;
+    if (Math.random() < mysteryDropChance) {
       pickup = {
         x: Math.max(35, Math.min(925, bot.x)),
         y: Math.max(85, Math.min(485, bot.y)),
@@ -1390,11 +1476,13 @@ function collectLuck() {
     changeMoney(-v);
     msg = `RAZZIA LIVELLO ${round} -${fmt(v)}`;
   } else if (type === "time") {
-    const v = 20 + Math.floor(Math.random() * 26);
+    const baseTime = 20 + Math.floor(Math.random() * 26),
+      v = selectedAvatar === 2 ? Math.ceil(baseTime * 1.25) : baseTime;
     timeLeft += v;
     msg = `TEMPO EXTRA +${v}s`;
   } else if (type === "timeloss") {
-    const v = 15 + Math.floor(Math.random() * 16);
+    const baseLoss = 15 + Math.floor(Math.random() * 16),
+      v = selectedAvatar === 2 ? Math.ceil(baseLoss * 0.8) : baseLoss;
     timeLeft = Math.max(1, timeLeft - v);
     msg = `TEMPO RUBATO -${v}s`;
   } else {
@@ -1502,7 +1590,7 @@ function loop(now) {
       lh = $("#luckHud");
     lh.classList.toggle("hidden", activeTime <= 0);
     if (activeTime > 0) {
-      $("#effectLabel").textContent = effectName;
+      $("#effectLabel").textContent = localizeLive(effectName);
       $("#luckValue").textContent =
         luckTime > 0
           ? `${luckBoost > 0 ? "+" : ""}${Math.round(luckBoost * 100)}%`
@@ -1818,7 +1906,7 @@ function effectSummary() {
     const seconds = Math.max(0, Math.ceil((globalEvent.endsAt - Date.now()) / 1000));
     effects.push(`${globalEvent.name} · ${seconds}s`);
   }
-  return effects.join(" | ");
+  return localizeLive(effects.join(" | "));
 }
 function updateMiniEffect() {
   const badge = $("#miniEffect");
