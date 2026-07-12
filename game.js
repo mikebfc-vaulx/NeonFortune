@@ -2620,6 +2620,24 @@ $("#restart").onclick = () => {
 document.querySelectorAll("#languagePicker button").forEach(
   (button) => (button.onclick = () => setLanguage(button.dataset.lang)),
 );
+function loadEligibleAds() {
+  const mobile = matchMedia("(max-width: 720px)").matches,
+    selector = mobile
+      ? ".mobile-ad-rail .adsbygoogle:not([data-loaded])"
+      : matchMedia("(min-width: 1500px)").matches
+        ? ".ad-rail .adsbygoogle:not([data-loaded])"
+        : "";
+  if (!selector) return;
+  document.querySelectorAll(selector).forEach((ad) => {
+    try {
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      ad.dataset.loaded = "true";
+    } catch {
+      // Ad blockers or a delayed AdSense response must not affect the game.
+    }
+  });
+}
+addEventListener("load", loadEligibleAds, { once: true });
 const languageObserver = new MutationObserver((mutations) => {
   const elements = new Set();
   mutations.forEach((mutation) => {
