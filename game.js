@@ -42,6 +42,41 @@ const mobileLabels = {
   it:["GIOCA","PUGNO"], en:["PLAY","PUNCH"], fr:["JOUER","FRAPPER"],
   de:["SPIELEN","SCHLAG"], es:["JUGAR","GOLPEAR"]
 };
+const mobileHints = { it:"TRASCINA SULLA MAPPA PER MUOVERTI", en:"DRAG ON THE MAP TO MOVE", fr:"GLISSEZ SUR LA CARTE POUR BOUGER", de:"ZUM BEWEGEN ÜBER DIE KARTE ZIEHEN", es:"ARRASTRA EN EL MAPA PARA MOVERTE" };
+const missionLocale = {
+  it:{collect:"Raccogli 2 misteri",punch:"Colpisci 5 personaggi",win:"Ottieni 3 vincite"},
+  en:{collect:"Collect 2 mysteries",punch:"Hit 5 characters",win:"Get 3 wins"},
+  fr:{collect:"Ramassez 2 mystères",punch:"Frappez 5 personnages",win:"Obtenez 3 victoires"},
+  de:{collect:"Sammle 2 Geheimnisse",punch:"Triff 5 Figuren",win:"Erziele 3 Siege"},
+  es:{collect:"Recoge 2 misterios",punch:"Golpea a 5 personajes",win:"Consigue 3 victorias"}
+};
+const liveLocale = {
+  en:[["Pareggio","Push"],["puntata restituita","bet returned"],["Hai vinto","You won"],["Il banco vince","The dealer wins"],["Il banco pesca","The dealer draws"],["Hai sballato","You busted"],["Il banco scopre la sua carta","The dealer reveals their card"],["Carta, raddoppia o stai?","Hit, double or stand?"],["Puntata raddoppiata","Bet doubled"],["Fiches piazzate","Chips placed"],["Saldo insufficiente","Insufficient balance"],["pagamento","payout"],["nessuna vincita","no win"],["I rulli stanno girando","The reels are spinning"],["Vittoria!","Win!"],["Nessuna combinazione","No combination"],["La ruota sta girando","The wheel is spinning"],["Estratto","Result"],["puntata","bet"],["restituzione","return"],["vinci","you win"],["pallina persa","ball lost"],["palline in gioco","balls in play"],["Cavallo","Horse"],["selezionato","selected"],["Guadagni","You earn"],["La tua puntata è persa","Your bet is lost"],["Missione completata","Mission complete"],["è entrato nella lobby","joined the lobby"],["Sei tornato al menu principale","You returned to the main menu"]],
+  fr:[["Pareggio","Égalité"],["puntata restituita","mise rendue"],["Hai vinto","Vous avez gagné"],["Il banco vince","La banque gagne"],["Il banco pesca","La banque tire"],["Hai sballato","Vous avez dépassé 21"],["Il banco scopre la sua carta","La banque révèle sa carte"],["Carta, raddoppia o stai?","Carte, doubler ou rester ?"],["Fiches piazzate","Jetons placés"],["Saldo insufficiente","Solde insuffisant"],["pagamento","paiement"],["nessuna vincita","aucun gain"],["I rulli stanno girando","Les rouleaux tournent"],["Vittoria!","Victoire !"],["Nessuna combinazione","Aucune combinaison"],["La ruota sta girando","La roue tourne"],["Estratto","Résultat"],["puntata","mise"],["restituzione","retour"],["vinci","vous gagnez"],["pallina persa","balle perdue"],["palline in gioco","balles en jeu"],["Cavallo","Cheval"],["selezionato","sélectionné"],["Guadagni","Vous gagnez"],["Missione completata","Mission accomplie"],["è entrato nella lobby","a rejoint le salon"]],
+  de:[["Pareggio","Unentschieden"],["puntata restituita","Einsatz zurück"],["Hai vinto","Du hast gewonnen"],["Il banco vince","Die Bank gewinnt"],["Il banco pesca","Die Bank zieht"],["Hai sballato","Du hast überkauft"],["Carta, raddoppia o stai?","Karte, verdoppeln oder halten?"],["Fiches piazzate","Gesetzte Chips"],["Saldo insufficiente","Unzureichendes Guthaben"],["pagamento","Auszahlung"],["nessuna vincita","kein Gewinn"],["I rulli stanno girando","Die Walzen drehen sich"],["Vittoria!","Gewinn!"],["Nessuna combinazione","Keine Kombination"],["La ruota sta girando","Das Rad dreht sich"],["Estratto","Ergebnis"],["puntata","Einsatz"],["restituzione","Rückgabe"],["vinci","du gewinnst"],["pallina persa","Kugel verloren"],["palline in gioco","Kugeln im Spiel"],["Cavallo","Pferd"],["selezionato","ausgewählt"],["Guadagni","Du erhältst"],["Missione completata","Mission abgeschlossen"],["è entrato nella lobby","ist der Lobby beigetreten"]],
+  es:[["Pareggio","Empate"],["puntata restituita","apuesta devuelta"],["Hai vinto","Has ganado"],["Il banco vince","La casa gana"],["Il banco pesca","La casa roba"],["Hai sballato","Te has pasado"],["Carta, raddoppia o stai?","¿Carta, doblar o plantarse?"],["Fiches piazzate","Fichas colocadas"],["Saldo insufficiente","Saldo insuficiente"],["pagamento","pago"],["nessuna vincita","sin premio"],["I rulli stanno girando","Los rodillos están girando"],["Vittoria!","¡Victoria!"],["Nessuna combinazione","Sin combinación"],["La ruota sta girando","La rueda está girando"],["Estratto","Resultado"],["puntata","apuesta"],["restituzione","devolución"],["vinci","ganas"],["pallina persa","bola perdida"],["palline in gioco","bolas en juego"],["Cavallo","Caballo"],["selezionato","seleccionado"],["Guadagni","Ganas"],["Missione completata","Misión completada"],["è entrato nella lobby","se unió a la sala"]]
+};
+function localizeLive(value) {
+  if (currentLanguage === "it") return value;
+  return (liveLocale[currentLanguage] || []).reduce((text, pair) => text.replaceAll(pair[0], pair[1]), value);
+}
+function localizeDynamicElement(element) {
+  if (!element) return;
+  const current = element.textContent;
+  if (currentLanguage === "it") {
+    if (element.dataset.i18nSource) element.textContent = element.dataset.i18nSource;
+    element.dataset.i18nRendered = element.textContent;
+    return;
+  }
+  if (!element.dataset.i18nSource || current !== element.dataset.i18nRendered)
+    element.dataset.i18nSource = current;
+  const translated = localizeLive(element.dataset.i18nSource);
+  if (current !== translated) element.textContent = translated;
+  element.dataset.i18nRendered = translated;
+}
+function refreshDynamicLanguage() {
+  document.querySelectorAll("#result,#toast,#lobbyStatus,#eventName").forEach(localizeDynamicElement);
+}
 let currentLanguage = "it";
 function setLanguage(lang) {
   if (!translations[lang]) lang = "it";
@@ -62,6 +97,11 @@ function setLanguage(lang) {
   $("#lobbySound").textContent = musicOn ? t.soundOn : t.soundOff;
   const mobileText = mobileLabels[lang];
   if (mobileText) { set("#touchPlay", mobileText[0]); set("#touchPunch", mobileText[1]); }
+  set(".touch-move-hint", mobileHints[lang]);
+  if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
+  if (typeof lobbyRoster !== "undefined") renderLobby();
+  if (typeof selectedAvatar !== "undefined") setRole();
+  refreshDynamicLanguage();
   if (typeof activeGameId !== "undefined" && activeGameId && modalOpen) {
     const localized = gameLocale[lang]?.[activeGameId];
     if (localized) { set(".game-title", localized[0]); set(".subtitle", localized[1]); }
@@ -88,6 +128,10 @@ let luckBoost = 0,
   spawnIn = 12 + Math.random() * 18;
 const player = { x: 480, y: 440, w: 24, h: 30, speed: 190 };
 const keys = {};
+let touchMoveX = 0,
+  touchMoveY = 0,
+  touchGesture = null,
+  suppressCanvasClick = false;
 let socket = null,
   myId = null,
   currentRoom = null,
@@ -213,21 +257,27 @@ function socketUrl() {
   return `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`;
 }
 function renderLobby() {
+  const lobbyWords = {
+    it:[" (TU)","PRONTO","IN ATTESA"], en:[" (YOU)","READY","WAITING"],
+    fr:[" (VOUS)","PRÊT","EN ATTENTE"], de:[" (DU)","BEREIT","WARTET"],
+    es:[" (TÚ)","LISTO","ESPERANDO"]
+  }[currentLanguage];
   const box = $("#lobbyPlayers");
   box.innerHTML = [...lobbyRoster.values()]
     .map(
       (p) =>
-        `<div class="lobby-player"><span>${avatarIcons[p.avatar] || "🎩"}</span><b>${p.name}${p.id === myId ? " (TU)" : ""}</b><span class="${p.ready ? "ready" : "not-ready"}">${p.ready ? "PRONTO" : "IN ATTESA"}</span></div>`,
+        `<div class="lobby-player"><span>${avatarIcons[p.avatar] || "🎩"}</span><b>${p.name}${p.id === myId ? lobbyWords[0] : ""}</b><span class="${p.ready ? "ready" : "not-ready"}">${p.ready ? lobbyWords[1] : lobbyWords[2]}</span></div>`,
     )
     .join("");
 }
 function setRole() {
-  const roles = [
-    "FORTUNATO +5%",
-    "BANCHIERE +5%",
-    "CORRIDORE +15%",
-    "PICCHIATORE +25%",
-  ];
+  const roles = {
+    it:["FORTUNATO +5%","BANCHIERE +5%","CORRIDORE +15%","PICCHIATORE +25%"],
+    en:["LUCKY +5%","BANKER +5%","RUNNER +15%","BRAWLER +25%"],
+    fr:["CHANCEUX +5%","BANQUIER +5%","COUREUR +15%","BAGARREUR +25%"],
+    de:["GLÜCKSPILZ +5%","BANKIER +5%","LÄUFER +15%","SCHLÄGER +25%"],
+    es:["AFORTUNADO +5%","BANQUERO +5%","CORREDOR +15%","LUCHADOR +25%"]
+  }[currentLanguage];
   $("#roleName").textContent = roles[selectedAvatar];
 }
 function newMission() {
@@ -235,7 +285,7 @@ function newMission() {
     ...missions[Math.floor(Math.random() * missions.length)],
     progress: 0,
   };
-  $("#missionName").textContent = mission.name;
+  $("#missionName").textContent = missionLocale[currentLanguage][mission.type];
   $("#missionProgress").textContent = `0 / ${mission.goal}`;
   $(".mission-box").classList.remove("complete");
 }
@@ -1277,16 +1327,18 @@ function luckyCard(hand, dk) {
   dk.splice(chosen.i, 1);
   return chosen.c;
 }
-function isNearStation(s) {
+function isNearStation(s, touchRange = false) {
+  const extraX = touchRange ? 72 : 30,
+    extraY = touchRange ? 82 : 45;
   return (
-    player.x > s.x - 30 &&
-    player.x < s.x + s.w + 30 &&
-    player.y > s.y - 45 &&
-    player.y < s.y + s.h + 45
+    player.x > s.x - extraX &&
+    player.x < s.x + s.w + extraX &&
+    player.y > s.y - extraY &&
+    player.y < s.y + s.h + extraY
   );
 }
-function nearby() {
-  return stations.find(isNearStation);
+function nearby(touchRange = false) {
+  return stations.find((station) => isNearStation(station, touchRange));
 }
 function loop(now) {
   const dt = Math.min((now - last) / 1000, 0.05);
@@ -1349,9 +1401,9 @@ function loop(now) {
   if (playing && !modalOpen) {
     let dx =
         (keys.ArrowRight || keys.d ? 1 : 0) -
-        (keys.ArrowLeft || keys.a ? 1 : 0),
+        (keys.ArrowLeft || keys.a ? 1 : 0) + touchMoveX,
       dy =
-        (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0);
+        (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0) + touchMoveY;
     const len = Math.hypot(dx, dy) || 1;
     if (dx || dy) {
       faceX = dx / len;
@@ -1515,7 +1567,7 @@ document.querySelectorAll("[data-move]").forEach((button) => {
 });
 $("#touchPlay").addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  const station = nearby();
+  const station = nearby(true);
   if (station && !modalOpen) openGame(station.id);
   else if (!station) toast(currentLanguage === "it" ? "Avvicinati a un tavolo" : "Move closer to a table");
 });
@@ -1527,7 +1579,38 @@ $("#touchPunch").addEventListener("pointerdown", (e) => {
 ["pointerup", "pointercancel", "lostpointercapture"].forEach((type) =>
   $("#touchPunch").addEventListener(type, (e) => { e.preventDefault(); releasePunchCharge(); }),
 );
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "touch" || modalOpen) return;
+  e.preventDefault();
+  canvas.setPointerCapture?.(e.pointerId);
+  touchGesture = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  suppressCanvasClick = false;
+  startMusic();
+});
+canvas.addEventListener("pointermove", (e) => {
+  if (!touchGesture || touchGesture.id !== e.pointerId) return;
+  e.preventDefault();
+  const dx = e.clientX - touchGesture.x,
+    dy = e.clientY - touchGesture.y,
+    distance = Math.hypot(dx, dy);
+  if (distance > 7) suppressCanvasClick = true;
+  const strength = Math.min(1, distance / 42);
+  touchMoveX = distance ? (dx / distance) * strength : 0;
+  touchMoveY = distance ? (dy / distance) * strength : 0;
+});
+const stopTouchMovement = (e) => {
+  if (!touchGesture || touchGesture.id !== e.pointerId) return;
+  touchMoveX = touchMoveY = 0;
+  touchGesture = null;
+};
+canvas.addEventListener("pointerup", stopTouchMovement);
+canvas.addEventListener("pointercancel", stopTouchMovement);
+canvas.addEventListener("lostpointercapture", stopTouchMovement);
 canvas.addEventListener("click", (e) => {
+  if (suppressCanvasClick) {
+    suppressCanvasClick = false;
+    return;
+  }
   const r = canvas.getBoundingClientRect(),
     x = ((e.clientX - r.left) * 960) / r.width,
     y = ((e.clientY - r.top) * 540) / r.height;
@@ -2512,6 +2595,18 @@ $("#restart").onclick = () => {
 document.querySelectorAll("#languagePicker button").forEach(
   (button) => (button.onclick = () => setLanguage(button.dataset.lang)),
 );
+const languageObserver = new MutationObserver((mutations) => {
+  const elements = new Set();
+  mutations.forEach((mutation) => {
+    const node = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+    const element = node?.matches?.("#result,#toast,#lobbyStatus,#eventName")
+      ? node
+      : node?.closest?.("#result,#toast,#lobbyStatus,#eventName");
+    if (element) elements.add(element);
+  });
+  elements.forEach(localizeDynamicElement);
+});
+languageObserver.observe(document.body, { subtree: true, childList: true, characterData: true });
 let savedLanguage = "it";
 try { savedLanguage = localStorage.getItem("neonFortuneLanguage") || "it"; } catch {}
 setLanguage(savedLanguage);
