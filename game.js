@@ -168,12 +168,10 @@ function localizeDynamicElement(element) {
   if (!element) return;
   const current = element.textContent;
   if (currentLanguage === "it") {
-    if (
-      element.dataset.i18nSource &&
-      current !== element.dataset.i18nSource
-    )
-      element.textContent = element.dataset.i18nSource;
-    element.dataset.i18nRendered = element.textContent;
+    // In italiano il testo appena scritto è la nuova sorgente. Non ripristinare
+    // la notifica precedente (es. "Lobby avviata") sopra un nuovo popup.
+    element.dataset.i18nSource = current;
+    element.dataset.i18nRendered = current;
     return;
   }
   if (!element.dataset.i18nSource || current !== element.dataset.i18nRendered)
@@ -188,6 +186,12 @@ function refreshDynamicLanguage() {
 let currentLanguage = "it";
 function setLanguage(lang) {
   if (!translations[lang]) lang = "it";
+  // Prima di tornare all'italiano ripristina le sorgenti originali salvate;
+  // da questo momento i nuovi messaggi italiani diventeranno nuove sorgenti.
+  if (lang === "it" && currentLanguage !== "it")
+    document.querySelectorAll("#result,#toast,#lobbyStatus,#eventName").forEach((element) => {
+      if (element.dataset.i18nSource) element.textContent = element.dataset.i18nSource;
+    });
   currentLanguage = lang;
   const t = translations[lang], set = (selector, value) => { const el = $(selector); if (el) el.textContent = value; };
   document.documentElement.lang = lang;
@@ -390,11 +394,36 @@ function renderLobby() {
 }
 function setRole() {
   const roles = {
-    it:["FORTUNATO +5%","BANCHIERE +5%","CORRIDORE +15% · TEMPO+","PICCHIATORE +25% · DROP +10%"],
-    en:["LUCKY +5%","BANKER +5%","RUNNER +15% · TIME+","BRAWLER +25% · DROP +10%"],
-    fr:["CHANCEUX +5%","BANQUIER +5%","COUREUR +15% · TEMPS+","BAGARREUR +25% · DROP +10%"],
-    de:["GLÜCKSPILZ +5%","BANKIER +5%","LÄUFER +15% · ZEIT+","SCHLÄGER +25% · DROP +10%"],
-    es:["AFORTUNADO +5%","BANQUERO +5%","CORREDOR +15% · TIEMPO+","LUCHADOR +25% · DROP +10%"]
+    it:[
+      "FORTUNATO · +5% probabilità favorevole con Fortuna attiva",
+      "BANCHIERE · +5% su vincite, restituzioni e ricompense",
+      "CORRIDORE · Velocità +15% · Tempo extra +25% · Tempo rubato −20%",
+      "PICCHIATORE · Sbalzo +25% · Drop misterioso 35% (+10%)"
+    ],
+    en:[
+      "LUCKY · +5% favourable chance while Luck is active",
+      "BANKER · +5% on wins, returns and rewards",
+      "RUNNER · Speed +15% · Extra time +25% · Time stolen −20%",
+      "BRAWLER · Knockback +25% · Mystery drop 35% (+10%)"
+    ],
+    fr:[
+      "CHANCEUX · +5 % de chance favorable avec Chance active",
+      "BANQUIER · +5 % sur gains, retours et récompenses",
+      "COUREUR · Vitesse +15 % · Temps extra +25 % · Temps volé −20 %",
+      "BAGARREUR · Projection +25 % · Drop mystère 35 % (+10 %)"
+    ],
+    de:[
+      "GLÜCKSPILZ · +5 % Gewinnchance bei aktivem Glück",
+      "BANKIER · +5 % auf Gewinne, Rückgaben und Belohnungen",
+      "LÄUFER · Tempo +15 % · Extrazeit +25 % · Zeitverlust −20 %",
+      "SCHLÄGER · Rückstoß +25 % · Geheimnis-Drop 35 % (+10 %)"
+    ],
+    es:[
+      "AFORTUNADO · +5 % favorable con Suerte activa",
+      "BANQUERO · +5 % en premios, devoluciones y recompensas",
+      "CORREDOR · Velocidad +15 % · Tiempo extra +25 % · Tiempo robado −20 %",
+      "LUCHADOR · Empuje +25 % · Drop misterioso 35 % (+10 %)"
+    ]
   }[currentLanguage];
   $("#roleName").textContent = roles[selectedAvatar];
 }

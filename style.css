@@ -1889,6 +1889,12 @@ button,
   height: 56px;
   overflow: hidden;
 }
+.game-status-strip .role-box strong {
+  margin: 2px 0 0;
+  font-size: 7px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
 .game-status-strip + .casino-wrap {
   margin-top: 4px;
 }
@@ -1906,6 +1912,7 @@ button,
     font-size: 8px;
   }
   .game-status-strip .side-hud strong { font-size: 8px; }
+  .game-status-strip .role-box strong { font-size: 6px; }
   .game-status-strip .side-hud small,
   .game-status-strip .side-hud span { font-size: 6px; }
 }
@@ -1939,6 +1946,11 @@ button,
   .game-status-strip .side-hud > :not(.side-hud-label) {
     min-height: 41px;
     height: 41px;
+  }
+  .game-status-strip .role-box strong {
+    max-height: 30px;
+    font-size: 5px;
+    line-height: 1.2;
   }
 }
 
