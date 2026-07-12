@@ -180,13 +180,17 @@ function trackMission(type) {
     `${Math.min(mission.progress, mission.goal)} / ${mission.goal}`;
   if (mission.progress >= mission.goal) {
     $(".mission-box").classList.add("complete");
-    toast(`Missione completata! +${fmt(100 * round)}`);
-    const reward = 100 * round;
+    const reward = objectiveReward();
+    toast(`Missione completata! +${fmt(reward)}`);
     setTimeout(() => {
       newMission();
       changeMoney(reward);
     }, 700);
   }
+}
+function objectiveReward() {
+  const proportional = Math.max(100 * round, money * 0.03, goal * 0.02);
+  return Math.max(100, Math.ceil(proportional / 50) * 50);
 }
 function showEvent(event) {
   globalEvent = event;
@@ -572,17 +576,21 @@ function musicTick() {
   musicStep++;
   musicTimer = setTimeout(musicTick, 60000 / bpm / 2);
 }
-$("#sound").onclick = () => {
+function toggleSound() {
   musicOn = !musicOn;
   $("#sound").textContent = musicOn ? "♪" : "×";
   $("#sound").classList.toggle("muted", !musicOn);
+  $("#lobbySound").textContent = musicOn ? "♪ AUDIO ON" : "× AUDIO OFF";
+  $("#lobbySound").classList.toggle("muted", !musicOn);
   if (musicOn) startMusic();
   else {
     clearTimeout(musicTimer);
     musicTimer = null;
     if (audioCtx) audioCtx.suspend();
   }
-};
+}
+$("#sound").onclick = toggleSound;
+$("#lobbySound").onclick = toggleSound;
 addEventListener("pointerdown", startMusic, { once: true });
 addEventListener("keydown", startMusic, { once: true });
 
@@ -1764,16 +1772,11 @@ function fortune() {
     ].sort(() => Math.random() - 0.5),
     short = (p) => (p === 150 ? "J" : String(p)),
     full = (p) => (p === 150 ? "JACKPOT 150×" : `${p}×`),
-    step = 18,
-    pos = (i) => {
-      const a = (i * step * Math.PI) / 180,
-        r = 124;
-      return `--label-angle:${i * step}deg;left:${143 + Math.sin(a) * r}px;top:${153 - Math.cos(a) * r}px`;
-    };
+    step = 360 / prizes.length;
   base(
     "RUOTA DELLA FORTUNA",
     "40% favorevole al giocatore · 60% favorevole al banco.",
-    `<div class="table"><div class="fortune-wheel-wrap"><div id="fortuneDisc" class="fortune-disc">${prizes.map((p, i) => `<span data-wheel-index="${i}" style="${pos(i)}">${short(p)}</span>`).join("")}<div class="fortune-center">×</div></div></div><p id="result" class="result">12 spicchi banco · 8 spicchi giocatore · J = Jackpot.</p></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" value="100"><button id="fortuneSpin" class="action">GIRA</button></div>`,
+    `<div class="table"><div class="fortune-wheel-wrap"><div id="fortuneDisc" class="fortune-disc">${prizes.map((p, i) => `<span data-wheel-index="${i}" style="--slot-angle:${i * step}deg">${short(p)}</span>`).join("")}<div class="fortune-center">×</div></div></div><p id="result" class="result">12 spicchi banco · 8 spicchi giocatore · J = Jackpot.</p></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" value="100"><button id="fortuneSpin" class="action">GIRA</button></div>`,
   );
   let rotation = 0;
   $("#fortuneSpin").onclick = () => {

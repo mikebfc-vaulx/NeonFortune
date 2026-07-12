@@ -46,9 +46,15 @@ body:after {
     0 0 70px #ef476f44;
 }
 .lobby-logo {
-  color: var(--gold);
-  font: 17px "Press Start 2P";
-  text-shadow: 3px 3px #8a3b72;
+  display: flex;
+  justify-content: center;
+  min-height: 118px;
+}
+.lobby-logo img {
+  width: min(360px, 86vw);
+  height: 140px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px #f6c45388);
 }
 .lobby-card h1 {
   font: 22px "Press Start 2P";
@@ -262,14 +268,35 @@ body:after {
     0 0 30px #8b5cf633;
 }
 .brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
   margin-right: auto;
   font-family: "Press Start 2P";
   color: var(--gold);
   text-shadow: 3px 3px #8a3b72;
   font-size: 15px;
 }
+.brand img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 7px #f6c45399);
+}
 .brand span {
-  color: var(--red);
+  color: var(--gold);
+}
+.lobby-sound {
+  margin-top: 13px;
+  border: 2px solid var(--gold);
+  background: #171224;
+  color: var(--gold);
+  box-shadow: 3px 3px #6c4b18;
+}
+.lobby-sound.muted {
+  border-color: #746d82;
+  color: #aaa2b8;
+  box-shadow: 3px 3px #38323f;
 }
 .stat {
   min-width: 130px;
@@ -1080,8 +1107,9 @@ button,
   content: "▼";
   position: absolute;
   z-index: 8;
-  left: 151px;
+  left: 50%;
   top: -18px;
+  transform: translateX(-50%);
   color: #fff;
   font-size: 38px;
   text-shadow: 0 3px #8a3b72;
@@ -1103,6 +1131,7 @@ button,
     0 0 35px #ffd16666,
     inset 0 0 0 5px #100c22;
   transition: transform 4.2s cubic-bezier(0.08, 0.68, 0.12, 1);
+  transform-origin: 50% 50%;
 }
 .fortune-wheel-wrap .fortune-disc:before {
   display: none;
@@ -1122,12 +1151,14 @@ button,
 .fortune-wheel-wrap .fortune-disc span {
   position: absolute;
   z-index: 4;
+  left: 50%;
+  top: 50%;
   width: 34px;
   height: 16px;
   display: grid;
   place-items: center;
-  transform: rotate(var(--label-angle)) !important;
-  transform-origin: center;
+  transform: translate(-50%, -50%) rotate(var(--slot-angle)) translateY(-124px);
+  transform-origin: 50% 50%;
   font: bold 9px "Space Mono";
   color: #fff;
   background: #080712aa;
@@ -1139,7 +1170,8 @@ button,
   color: #ffd166;
 }
 .fortune-wheel-wrap .fortune-disc span.wheel-winner {
-  transform: rotate(var(--label-angle)) scale(1.25) !important;
+  transform: translate(-50%, -50%) rotate(var(--slot-angle)) translateY(-124px)
+    scale(1.25);
   background: #fff;
   color: #151020;
   outline: 2px solid #ffd166;
