@@ -1844,6 +1844,13 @@ button,
   max-width: 100%;
   margin: 0;
 }
+.game-status-strip .event-banner.hidden {
+  /* Mantiene occupata la colonna sinistra: gli obiettivi non cambiano mai
+     posizione quando un evento comincia o termina. */
+  display: block !important;
+  visibility: hidden;
+  pointer-events: none;
+}
 .game-status-strip .toast {
   grid-column: 2;
   grid-row: 1;
@@ -1868,6 +1875,8 @@ button,
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 3px;
   align-self: center;
+  justify-self: end;
+  margin-left: auto;
 }
 .game-status-strip .side-hud-label {
   grid-column: 1 / -1;
