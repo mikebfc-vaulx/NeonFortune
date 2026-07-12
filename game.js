@@ -3,6 +3,32 @@ const ctx = canvas.getContext("2d");
 ctx.imageSmoothingEnabled = false;
 
 const $ = (s) => document.querySelector(s);
+const translations = {
+  it: { intro:"Crea una sala privata o entra con il codice di un amico.", player:"NOME GIOCATORE", avatar:"AVATAR", create:"CREA LOBBY", or:"OPPURE", code:"CODICE", join:"ENTRA", ready:"SONO PRONTO", waiting:"La partita parte quando tutti sono pronti.", virtualTitle:"SOLO VALUTA VIRTUALE", virtualText:"Nessun deposito, prelievo o premio in denaro reale. Il saldo di gioco non ha valore economico e non è convertibile.", terms:"Termini", balance:"SALDO", objective:"OBIETTIVO", time:"TEMPO", players:"GIOCATORI", copy:"COPIA CODICE", back:"TORNA ALLA LOBBY", prompt:"Premi <b>E</b> per giocare", controls:"WASD: muoviti · E: gioca · SPAZIO: pugno · 1–5: emote", mission:"MISSIONE", skill:"ABILITÀ", combo:"COMBO SQUADRA", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" },
+  en: { intro:"Create a private room or join with a friend's code.", player:"PLAYER NAME", avatar:"AVATAR", create:"CREATE LOBBY", or:"OR", code:"CODE", join:"JOIN", ready:"I'M READY", waiting:"The game starts when everyone is ready.", virtualTitle:"VIRTUAL CURRENCY ONLY", virtualText:"No deposits, withdrawals or real-money prizes. The game balance has no monetary value and cannot be converted.", terms:"Terms", balance:"BALANCE", objective:"TARGET", time:"TIME", players:"PLAYERS", copy:"COPY CODE", back:"BACK TO LOBBY", prompt:"Press <b>E</b> to play", controls:"WASD: move · E: play · SPACE: punch · 1–5: emote", mission:"MISSION", skill:"SKILL", combo:"TEAM COMBO", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" },
+  fr: { intro:"Créez un salon privé ou rejoignez-le avec le code d'un ami.", player:"NOM DU JOUEUR", avatar:"AVATAR", create:"CRÉER UN SALON", or:"OU", code:"CODE", join:"REJOINDRE", ready:"JE SUIS PRÊT", waiting:"La partie commence quand tout le monde est prêt.", virtualTitle:"MONNAIE VIRTUELLE UNIQUEMENT", virtualText:"Aucun dépôt, retrait ou prix en argent réel. Le solde du jeu n'a aucune valeur monétaire et n'est pas convertible.", terms:"Conditions", balance:"SOLDE", objective:"OBJECTIF", time:"TEMPS", players:"JOUEURS", copy:"COPIER LE CODE", back:"RETOUR AU SALON", prompt:"Appuyez sur <b>E</b> pour jouer", controls:"WASD : bouger · E : jouer · ESPACE : frapper · 1–5 : emote", mission:"MISSION", skill:"CAPACITÉ", combo:"COMBO D'ÉQUIPE", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" },
+  de: { intro:"Erstelle eine private Lobby oder tritt mit dem Code eines Freundes bei.", player:"SPIELERNAME", avatar:"AVATAR", create:"LOBBY ERSTELLEN", or:"ODER", code:"CODE", join:"BEITRETEN", ready:"ICH BIN BEREIT", waiting:"Das Spiel beginnt, wenn alle bereit sind.", virtualTitle:"NUR VIRTUELLE WÄHRUNG", virtualText:"Keine Einzahlungen, Auszahlungen oder Echtgeldpreise. Das Spielguthaben hat keinen Geldwert und ist nicht konvertierbar.", terms:"Bedingungen", balance:"GUTHABEN", objective:"ZIEL", time:"ZEIT", players:"SPIELER", copy:"CODE KOPIEREN", back:"ZURÜCK ZUR LOBBY", prompt:"Drücke <b>E</b> zum Spielen", controls:"WASD: bewegen · E: spielen · LEERTASTE: schlagen · 1–5: Emote", mission:"MISSION", skill:"FÄHIGKEIT", combo:"TEAM-KOMBO", soundOn:"♪ AUDIO AN", soundOff:"× AUDIO AUS" },
+  es: { intro:"Crea una sala privada o entra con el código de un amigo.", player:"NOMBRE DEL JUGADOR", avatar:"AVATAR", create:"CREAR SALA", or:"O", code:"CÓDIGO", join:"ENTRAR", ready:"ESTOY LISTO", waiting:"La partida comienza cuando todos están listos.", virtualTitle:"SOLO MONEDA VIRTUAL", virtualText:"Sin depósitos, retiros ni premios en dinero real. El saldo del juego no tiene valor monetario ni es convertible.", terms:"Términos", balance:"SALDO", objective:"OBJETIVO", time:"TIEMPO", players:"JUGADORES", copy:"COPIAR CÓDIGO", back:"VOLVER A LA SALA", prompt:"Pulsa <b>E</b> para jugar", controls:"WASD: moverse · E: jugar · ESPACIO: golpear · 1–5: emoticono", mission:"MISIÓN", skill:"HABILIDAD", combo:"COMBO DE EQUIPO", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" }
+};
+let currentLanguage = "it";
+function setLanguage(lang) {
+  if (!translations[lang]) lang = "it";
+  currentLanguage = lang;
+  const t = translations[lang], set = (selector, value) => { const el = $(selector); if (el) el.textContent = value; };
+  document.documentElement.lang = lang;
+  try { localStorage.setItem("neonFortuneLanguage", lang); } catch {}
+  document.querySelectorAll("#languagePicker button").forEach((b) => b.classList.toggle("selected", b.dataset.lang === lang));
+  set(".lobby-card > p:not(.lobby-status)", t.intro);
+  const nameLabel = $("#playerName")?.parentElement?.childNodes[0]; if (nameLabel) nameLabel.nodeValue = t.player;
+  set(".avatar-picker > span", t.avatar); set("#createRoom", t.create); set("#lobbyEntry > span", t.or);
+  $("#roomCode").placeholder = t.code; set("#joinRoom", t.join); set("#readyButton", t.ready); set("#waitingRoom small", t.waiting);
+  set(".virtual-money-notice strong", t.virtualTitle); set(".virtual-money-notice span", t.virtualText); set('.legal-links a[href="terms.html"]', t.terms);
+  set(".stat:not(.target):not(.timer) small", t.balance); const target = $(".stat.target small")?.childNodes[0]; if (target) target.nodeValue = `${t.objective} #`;
+  set(".stat.timer small", t.time); set("#copyRoom", t.copy); set("#leaveRoom", t.back); set(".controls", t.controls);
+  $("#prompt").innerHTML = t.prompt; set(".mission-box small", t.mission); set(".role-box small", t.skill); set(".combo-box small", t.combo);
+  const roomText = [...$("#roomBar").childNodes].find((n) => n.nodeType === 3 && /GIOCATORI|PLAYERS|JOUEURS|SPIELER|JUGADORES/.test(n.nodeValue)); if (roomText) roomText.nodeValue = ` ${t.players} `;
+  $("#lobbySound").textContent = musicOn ? t.soundOn : t.soundOff;
+}
 const moneyEl = $("#money"),
   goalEl = $("#goal"),
   timerEl = $("#timer"),
@@ -302,6 +328,7 @@ function connectMultiplayer() {
     const m = JSON.parse(e.data);
     if (m.type === "connected") myId = m.id;
     else if (m.type === "error") status.textContent = m.message;
+    else if (m.type === "left") returnToLobby();
     else if (m.type === "joined") {
       myId = m.id;
       currentRoom = m.code;
@@ -415,6 +442,30 @@ $("#copyRoom").onclick = async () => {
   } catch {
     toast(`Codice lobby: ${currentRoom}`);
   }
+};
+function returnToLobby() {
+  playing = false;
+  closeGame();
+  currentRoom = null;
+  isReady = false;
+  remotePlayers.clear();
+  lobbyRoster.clear();
+  hideEvent();
+  $("#end-screen").classList.add("hidden");
+  $("#roomBar").classList.add("hidden");
+  $("#lobby-screen").classList.remove("hidden");
+  $("#lobbyEntry").classList.remove("hidden");
+  $("#waitingRoom").classList.add("hidden");
+  $("#readyButton").textContent = "SONO PRONTO";
+  $("#readyButton").classList.remove("is-ready");
+  $("#lobbyStatus").textContent = "Sei tornato al menu principale.";
+  restartMusic();
+}
+$("#leaveRoom").onclick = () => {
+  if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
+  $("#leaveRoom").disabled = true;
+  socket.send(JSON.stringify({ type: "leave" }));
+  setTimeout(() => ($("#leaveRoom").disabled = false), 800);
 };
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
@@ -596,7 +647,8 @@ function toggleSound() {
   musicOn = !musicOn;
   $("#sound").textContent = musicOn ? "♪" : "×";
   $("#sound").classList.toggle("muted", !musicOn);
-  $("#lobbySound").textContent = musicOn ? "♪ AUDIO ON" : "× AUDIO OFF";
+  const languageText = translations[currentLanguage];
+  $("#lobbySound").textContent = musicOn ? languageText.soundOn : languageText.soundOff;
   $("#lobbySound").classList.toggle("muted", !musicOn);
   if (musicOn) startMusic();
   else {
@@ -2364,5 +2416,11 @@ $("#restart").onclick = () => {
   $("#end-screen").classList.add("hidden");
   sync();
 };
+document.querySelectorAll("#languagePicker button").forEach(
+  (button) => (button.onclick = () => setLanguage(button.dataset.lang)),
+);
+let savedLanguage = "it";
+try { savedLanguage = localStorage.getItem("neonFortuneLanguage") || "it"; } catch {}
+setLanguage(savedLanguage);
 sync();
 requestAnimationFrame(safeLoop);

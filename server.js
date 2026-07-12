@@ -77,6 +77,18 @@ wss.on("connection", (ws) => {
     ws,
     room: null,
   };
+  const leaveRoom = () => {
+    if (!player.room) return;
+    const code = player.room,
+      room = rooms.get(code);
+    player.room = null;
+    player.ready = false;
+    if (!room) return;
+    room.players.delete(player.id);
+    broadcast(room, { type: "playerLeft", id: player.id });
+    broadcast(room, { type: "count", count: room.players.size });
+    if (!room.players.size) rooms.delete(code);
+  };
   send(ws, { type: "connected", id: player.id });
   ws.on("message", (raw) => {
     if (raw.length > 4096) return;
@@ -85,6 +97,10 @@ wss.on("connection", (ws) => {
       m = JSON.parse(raw);
     } catch {
       return;
+    }
+    if (m.type === "leave") {
+      leaveRoom();
+      return send(ws, { type: "left" });
     }
     if (m.type === "create" || m.type === "join") {
       const roomCode =
@@ -243,13 +259,7 @@ wss.on("connection", (ws) => {
     }
   });
   ws.on("close", () => {
-    if (!player.room) return;
-    const room = rooms.get(player.room);
-    if (!room) return;
-    room.players.delete(player.id);
-    broadcast(room, { type: "playerLeft", id: player.id });
-    broadcast(room, { type: "count", count: room.players.size });
-    if (!room.players.size) rooms.delete(player.room);
+    leaveRoom();
   });
 });
 const heartbeat = setInterval(() => {

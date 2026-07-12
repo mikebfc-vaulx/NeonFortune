@@ -27,6 +27,35 @@ body:after {
   pointer-events: none;
   background: repeating-linear-gradient(0deg, transparent 0 3px, #0002 4px);
 }
+.language-picker {
+  position: fixed;
+  z-index: 100;
+  top: 12px;
+  right: 14px;
+  display: flex;
+  gap: 5px;
+  padding: 6px;
+  border: 2px solid #4f3a70;
+  background: #100d20dd;
+  box-shadow: 4px 4px #05040b;
+}
+.language-picker button {
+  width: 35px;
+  height: 29px;
+  padding: 0;
+  border: 2px solid transparent;
+  background: #211b32;
+  cursor: pointer;
+  font-size: 19px;
+  line-height: 1;
+  filter: saturate(0.65);
+}
+.language-picker button:hover,
+.language-picker button.selected {
+  border-color: #ffd166;
+  filter: none;
+  transform: translateY(-2px);
+}
 .lobby-screen {
   position: fixed;
   inset: 0;
@@ -94,6 +123,11 @@ body:after {
   box-shadow: 4px 4px #8a5730;
   font-weight: bold;
   cursor: pointer;
+}
+#leaveRoom {
+  color: white;
+  background: #be3150;
+  box-shadow: 2px 2px #68192d;
 }
 .lobby-actions span {
   font-size: 10px;

@@ -8,6 +8,13 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <nav id="languagePicker" class="language-picker" aria-label="Seleziona lingua">
+    <button data-lang="it" class="selected" title="Italiano" aria-label="Italiano">🇮🇹</button>
+    <button data-lang="en" title="English" aria-label="English">🇬🇧</button>
+    <button data-lang="fr" title="Français" aria-label="Français">🇫🇷</button>
+    <button data-lang="de" title="Deutsch" aria-label="Deutsch">🇩🇪</button>
+    <button data-lang="es" title="Español" aria-label="Español">🇪🇸</button>
+  </nav>
   <div id="lobby-screen" class="lobby-screen">
     <section class="lobby-card">
       <div class="lobby-logo"><img src="assets/neon-fortune-logo.png" alt="Neon Fortune"></div>
@@ -39,7 +46,7 @@
       <div id="luckHud" class="luck-hud hidden"><small id="effectLabel">EFFETTO</small><strong id="luckValue">?</strong><span id="luckTimer">0s</span></div>
       <button id="sound" aria-label="Audio">♪</button>
     </header>
-    <div id="roomBar" class="room-bar hidden">LOBBY <strong id="currentRoom">------</strong> · <span id="onlineCount">1</span> GIOCATORI <button id="copyRoom">COPIA CODICE</button></div>
+    <div id="roomBar" class="room-bar hidden">LOBBY <strong id="currentRoom">------</strong> · <span id="onlineCount">1</span> GIOCATORI <button id="copyRoom">COPIA CODICE</button><button id="leaveRoom">TORNA ALLA LOBBY</button></div>
     <div id="eventBanner" class="event-banner hidden"><strong id="eventName">EVENTO</strong><span id="eventTime">25s</span></div>
     <div class="side-hud"><div class="combo-box"><small>COMBO SQUADRA</small><strong id="comboValue">×0</strong><div><i id="comboFill"></i></div></div><div class="mission-box"><small>MISSIONE</small><strong id="missionName">Raccogli 2 misteri</strong><span id="missionProgress">0 / 2</span></div><div class="role-box"><small>ABILITÀ</small><strong id="roleName">FORTUNATO</strong></div></div>
 
