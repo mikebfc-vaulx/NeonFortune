@@ -991,7 +991,7 @@ button,
   .hud {
     height: auto;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 88px repeat(3, minmax(0, 1fr));
     gap: 5px;
     padding: 7px;
   }
@@ -1076,7 +1076,35 @@ button,
     border-width: 3px;
   }
   .side-hud {
-    display: none;
+    position: static;
+    z-index: auto;
+    grid-column: 1;
+    grid-row: 2;
+    width: 84px;
+    display: grid;
+    gap: 2px;
+    line-height: 1.05;
+  }
+  .side-hud > div {
+    padding: 3px 4px;
+    border-width: 1px;
+    box-shadow: 1px 1px #030206;
+    overflow: hidden;
+  }
+  .side-hud small {
+    font-size: 5px;
+  }
+  .side-hud strong {
+    margin: 2px 0;
+    font-size: 7px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .side-hud span {
+    font-size: 7px;
+  }
+  .combo-box > div {
+    height: 3px;
   }
   .mobile-controls {
     position: fixed;
@@ -1371,4 +1399,34 @@ button,
     max-width: none;
     text-align: left;
   }
+}
+/* Mobile HUD override: must remain after the desktop side HUD rules. */
+@media (max-width: 720px) {
+  .hud .side-hud {
+    position: static;
+    z-index: auto;
+    right: auto;
+    bottom: auto;
+    grid-column: 1;
+    grid-row: 2;
+    width: 84px;
+    display: grid;
+    gap: 2px;
+    line-height: 1.05;
+  }
+  .hud .side-hud > div {
+    padding: 3px 4px;
+    border-width: 1px;
+    box-shadow: 1px 1px #030206;
+    overflow: hidden;
+  }
+  .hud .side-hud small { font-size: 5px; }
+  .hud .side-hud strong {
+    margin: 2px 0;
+    font-size: 7px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .hud .side-hud span { font-size: 7px; }
+  .hud .combo-box > div { height: 3px; }
 }
