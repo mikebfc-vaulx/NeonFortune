@@ -66,8 +66,16 @@ const liveLocale = {
   de:[["Pareggio","Unentschieden"],["puntata restituita","Einsatz zurück"],["Hai vinto","Du hast gewonnen"],["Il banco vince","Die Bank gewinnt"],["Il banco pesca","Die Bank zieht"],["Hai sballato","Du hast überkauft"],["Carta, raddoppia o stai?","Karte, verdoppeln oder halten?"],["Fiches piazzate","Gesetzte Chips"],["Saldo insufficiente","Unzureichendes Guthaben"],["pagamento","Auszahlung"],["nessuna vincita","kein Gewinn"],["I rulli stanno girando","Die Walzen drehen sich"],["Vittoria!","Gewinn!"],["Nessuna combinazione","Keine Kombination"],["La ruota sta girando","Das Rad dreht sich"],["Estratto","Ergebnis"],["puntata","Einsatz"],["restituzione","Rückgabe"],["vinci","du gewinnst"],["pallina persa","Kugel verloren"],["palline in gioco","Kugeln im Spiel"],["Cavallo","Pferd"],["selezionato","ausgewählt"],["Guadagni","Du erhältst"],["Missione completata","Mission abgeschlossen"],["è entrato nella lobby","ist der Lobby beigetreten"]],
   es:[["Pareggio","Empate"],["puntata restituita","apuesta devuelta"],["Hai vinto","Has ganado"],["Il banco vince","La casa gana"],["Il banco pesca","La casa roba"],["Hai sballato","Te has pasado"],["Carta, raddoppia o stai?","¿Carta, doblar o plantarse?"],["Fiches piazzate","Fichas colocadas"],["Saldo insufficiente","Saldo insuficiente"],["pagamento","pago"],["nessuna vincita","sin premio"],["I rulli stanno girando","Los rodillos están girando"],["Vittoria!","¡Victoria!"],["Nessuna combinazione","Sin combinación"],["La ruota sta girando","La rueda está girando"],["Estratto","Resultado"],["puntata","apuesta"],["restituzione","devolución"],["vinci","ganas"],["pallina persa","bola perdida"],["palline in gioco","bolas en juego"],["Cavallo","Caballo"],["selezionato","seleccionado"],["Guadagni","Ganas"],["Missione completata","Misión completada"],["è entrato nella lobby","se unió a la sala"]]
 };
+const lobbyStatusLocale = {
+  en:{"Connessione al casinò...":"Connecting to the casino...","Connesso. Crea o raggiungi una lobby.":"Connected. Create or join a lobby.","Connessione persa. Riconnessione...":"Connection lost. Reconnecting...","Scegli Pronto quando vuoi iniziare.":"Choose Ready when you want to start.","Connessione al server non disponibile":"Server connection unavailable","Inserisci il codice della lobby":"Enter the lobby code","Creazione lobby...":"Creating lobby...","Accesso alla lobby...":"Joining lobby..."},
+  fr:{"Connessione al casinò...":"Connexion au casino...","Connesso. Crea o raggiungi una lobby.":"Connecté. Créez ou rejoignez un salon.","Connessione persa. Riconnessione...":"Connexion perdue. Reconnexion...","Scegli Pronto quando vuoi iniziare.":"Choisissez Prêt lorsque vous voulez commencer.","Connessione al server non disponibile":"Connexion au serveur indisponible","Inserisci il codice della lobby":"Saisissez le code du salon","Creazione lobby...":"Création du salon...","Accesso alla lobby...":"Connexion au salon..."},
+  de:{"Connessione al casinò...":"Verbindung zum Casino...","Connesso. Crea o raggiungi una lobby.":"Verbunden. Erstelle eine Lobby oder tritt bei.","Connessione persa. Riconnessione...":"Verbindung verloren. Neu verbinden...","Scegli Pronto quando vuoi iniziare.":"Wähle Bereit, wenn du starten möchtest.","Connessione al server non disponibile":"Serververbindung nicht verfügbar","Inserisci il codice della lobby":"Lobby-Code eingeben","Creazione lobby...":"Lobby wird erstellt...","Accesso alla lobby...":"Lobby wird betreten..."},
+  es:{"Connessione al casinò...":"Conectando con el casino...","Connesso. Crea o raggiungi una lobby.":"Conectado. Crea una sala o únete a una.","Connessione persa. Riconnessione...":"Conexión perdida. Reconectando...","Scegli Pronto quando vuoi iniziare.":"Pulsa Listo cuando quieras comenzar.","Connessione al server non disponibile":"Conexión con el servidor no disponible","Inserisci il codice della lobby":"Introduce el código de la sala","Creazione lobby...":"Creando sala...","Accesso alla lobby...":"Entrando en la sala..."}
+};
 function localizeLive(value) {
   if (currentLanguage === "it") return value;
+  const exact = lobbyStatusLocale[currentLanguage]?.[value];
+  if (exact) return exact;
   return (liveLocale[currentLanguage] || []).reduce((text, pair) => text.replaceAll(pair[0], pair[1]), value);
 }
 function localizeDynamicElement(element) {
@@ -145,7 +153,8 @@ const keys = {};
 let touchMoveX = 0,
   touchMoveY = 0,
   touchGesture = null,
-  suppressCanvasClick = false;
+  suppressCanvasClick = false,
+  playerWalkPhase = 0;
 let socket = null,
   myId = null,
   currentRoom = null,
@@ -398,6 +407,7 @@ function startRoom(players, economy) {
   applyEconomy(economy);
   $("#lobby-screen").classList.add("hidden");
   $("#roomBar").classList.remove("hidden");
+  setTimeout(loadEligibleAds, 0);
   playing = true;
   restartMusic();
   last = performance.now();
@@ -557,6 +567,7 @@ function returnToLobby() {
   $("#end-screen").classList.add("hidden");
   $("#roomBar").classList.add("hidden");
   $("#lobby-screen").classList.remove("hidden");
+  setTimeout(loadEligibleAds, 0);
   $("#lobbyEntry").classList.remove("hidden");
   $("#waitingRoom").classList.add("hidden");
   $("#readyButton").textContent = "SONO PRONTO";
@@ -997,10 +1008,13 @@ function drawStation(s) {
   const translatedName = gameLocale[currentLanguage]?.tables?.[s.id] || s.name;
   neon(translatedName, cx, s.y + 99, "#fff", translatedName.length > 14 ? 8 : 10);
 }
-function drawSkin(x, y, avatar, name, punch = false, fx = 1, fy = 0) {
+function drawSkin(x, y, avatar, name, punch = false, fx = 1, fy = 0, walkPhase = 0, walking = false) {
   const suits = ["#39e6d0", "#8f6cff", "#b86b32", "#ef476f"],
     hats = ["#241337", "#ffd166", "#8b552e", "#39e6d0"],
-    skin = ["#f1b58f", "#9a633f", "#d89b69", "#f1b58f"][avatar] || "#f1b58f";
+    skin = ["#f1b58f", "#9a633f", "#d89b69", "#f1b58f"][avatar] || "#f1b58f",
+    swing = walking && !punch ? Math.sin(walkPhase) * 4 : 0,
+    bob = walking && !punch ? Math.abs(Math.sin(walkPhase)) * 1.5 : 0;
+  y -= bob;
   ctx.save();
   ctx.fillStyle = "#171020";
   ctx.fillRect(x - 12, y + 8, 24, 22);
@@ -1009,8 +1023,8 @@ function drawSkin(x, y, avatar, name, punch = false, fx = 1, fy = 0) {
   ctx.fillStyle = suits[avatar] || suits[0];
   ctx.fillRect(x - 12, y + 8, 24, 12);
   ctx.fillStyle = "#080712";
-  ctx.fillRect(x - 8, y + 30, 7, 8);
-  ctx.fillRect(x + 2, y + 30, 7, 8);
+  ctx.fillRect(x - 8 + swing, y + 30, 7, 8);
+  ctx.fillRect(x + 2 - swing, y + 30, 7, 8);
   ctx.fillStyle = hats[avatar] || hats[0];
   if (avatar === 0) {
     ctx.fillRect(x - 12, y - 12, 24, 5);
@@ -1038,8 +1052,8 @@ function drawSkin(x, y, avatar, name, punch = false, fx = 1, fy = 0) {
     ctx.fillStyle = "#fff";
     ctx.fillRect(x + fx * 39 - 3, y + 10 + fy * 34, 6, 6);
   } else {
-    ctx.fillRect(x - 16, y + 9, 5, 13);
-    ctx.fillRect(x + 11, y + 9, 5, 13);
+    ctx.fillRect(x - 16, y + 9 - swing, 5, 13);
+    ctx.fillRect(x + 11, y + 9 + swing, 5, 13);
   }
   ctx.font = "bold 10px monospace";
   ctx.textAlign = "center";
@@ -1069,6 +1083,8 @@ function drawPlayer() {
     punchTime > 0,
     faceX,
     faceY,
+    playerWalkPhase,
+    Math.abs(touchMoveX) + Math.abs(touchMoveY) > 0 || keys.w || keys.a || keys.s || keys.d || keys.ArrowUp || keys.ArrowDown || keys.ArrowLeft || keys.ArrowRight,
   );
   drawEmote(player.x, player.y, localEmote);
 }
@@ -1081,6 +1097,8 @@ function drawRemotePlayer(p) {
     (p.punchUntil || 0) > performance.now(),
     p.faceX || 1,
     p.faceY || 0,
+    p.walkPhase || 0,
+    !!p.walking,
   );
   drawEmote(p.x, p.y, p.emote);
 }
@@ -1171,8 +1189,13 @@ function updateRemoteInterpolation(dt) {
   const blend = 1 - Math.exp(-dt * 22);
   remotePlayers.forEach((p) => {
     if (p.knock) return;
-    if (Number.isFinite(p.tx)) p.x += (p.tx - p.x) * blend;
-    if (Number.isFinite(p.ty)) p.y += (p.ty - p.y) * blend;
+    const dx = Number.isFinite(p.tx) ? p.tx - p.x : 0,
+      dy = Number.isFinite(p.ty) ? p.ty - p.y : 0,
+      moving = Math.hypot(dx, dy) > 0.25;
+    p.walking = moving;
+    if (moving) p.walkPhase = (p.walkPhase || 0) + dt * 13;
+    if (Number.isFinite(p.tx)) p.x += dx * blend;
+    if (Number.isFinite(p.ty)) p.y += dy * blend;
   });
 }
 function drawImpacts() {
@@ -1422,6 +1445,7 @@ function loop(now) {
     if (dx || dy) {
       faceX = dx / len;
       faceY = dy / len;
+      playerWalkPhase += dt * 13;
     }
     const roleSpeed = selectedAvatar === 2 ? 1.15 : 1;
     player.x = Math.max(
@@ -2620,12 +2644,30 @@ $("#restart").onclick = () => {
 document.querySelectorAll("#languagePicker button").forEach(
   (button) => (button.onclick = () => setLanguage(button.dataset.lang)),
 );
+const reusableAdUnits = new Map(
+  [...document.querySelectorAll("[data-ad-unit]")].map((ad) => [ad.dataset.adUnit, ad]),
+);
 function loadEligibleAds() {
   const mobile = matchMedia("(max-width: 720px)").matches,
-    selector = mobile
-      ? ".mobile-ad-rail .adsbygoogle:not([data-loaded])"
-      : matchMedia("(min-width: 1540px)").matches
-        ? ".ad-rail .adsbygoogle:not([data-loaded])"
+    desktop = matchMedia("(min-width: 1540px)").matches,
+    inLobby = !$("#lobby-screen").classList.contains("hidden"),
+    activeUnits = mobile ? ["mobile"] : desktop ? ["left", "right"] : [];
+  const destinations = inLobby
+    ? { left: ".lobby-ad-left", right: ".lobby-ad-right", mobile: ".lobby-ad-mobile" }
+    : { left: ".ad-rail-left", right: ".ad-rail-right", mobile: ".mobile-ad-rail" };
+  reusableAdUnits.forEach((ad, unit) => {
+    if (!activeUnits.includes(unit)) return ad.remove();
+    const container = document.querySelector(destinations[unit]);
+    if (container && ad.parentElement !== container) container.appendChild(ad);
+  });
+  const selector = mobile
+      ? inLobby
+        ? ".lobby-ad-mobile .adsbygoogle:not([data-loaded])"
+        : ".mobile-ad-rail .adsbygoogle:not([data-loaded])"
+      : desktop
+        ? inLobby
+          ? ".lobby-ad .adsbygoogle:not([data-loaded])"
+          : ".ad-rail .adsbygoogle:not([data-loaded])"
         : "";
   if (!selector) return;
   document.querySelectorAll(selector).forEach((ad) => {
@@ -2637,7 +2679,9 @@ function loadEligibleAds() {
     }
   });
 }
-addEventListener("load", loadEligibleAds, { once: true });
+loadEligibleAds();
+if (document.readyState !== "complete")
+  addEventListener("load", loadEligibleAds, { once: true });
 const languageObserver = new MutationObserver((mutations) => {
   const elements = new Set();
   mutations.forEach((mutation) => {
