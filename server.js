@@ -61,6 +61,18 @@ const roster = (room) =>
     avatar: p.avatar,
     ready: p.ready,
   }));
+const mysteryEffects = ["luck", "luck", "curse", "cash", "cashloss", "time", "timeloss", "speed", "slow"];
+function spawnSharedPickup(room, x, y, reason = "random") {
+  if (!room || room.pickup) return false;
+  room.pickup = {
+    id: Math.random().toString(36).slice(2, 10),
+    x: Math.round(Math.max(35, Math.min(925, Number(x) || 480))),
+    y: Math.round(Math.max(85, Math.min(485, Number(y) || 270))),
+    expiresAt: Date.now() + 18000,
+  };
+  broadcast(room, { type: "pickupSpawn", pickup: room.pickup, reason });
+  return true;
+}
 wss.on("connection", (ws) => {
   ws.isAlive = true;
   ws.on("pong", () => (ws.isAlive = true));
@@ -118,6 +130,9 @@ wss.on("connection", (ws) => {
           combo: 0,
           event: null,
           nextEvent: Date.now() + 35000,
+          started: false,
+          pickup: null,
+          nextPickup: Date.now() + 12000 + Math.random() * 18000,
         };
         rooms.set(roomCode, room);
       }
@@ -143,6 +158,7 @@ wss.on("connection", (ws) => {
           combo: room.combo,
         },
         event: room.event,
+        pickup: room.pickup,
       });
       broadcast(
         room,
@@ -166,7 +182,8 @@ wss.on("connection", (ws) => {
       const room = rooms.get(player.room);
       player.ready = !!m.ready;
       broadcast(room, { type: "roster", players: roster(room) });
-      if (room.players.size && [...room.players.values()].every((p) => p.ready))
+      if (room.players.size && [...room.players.values()].every((p) => p.ready)) {
+        room.started = true;
         broadcast(room, {
           type: "start",
           players: roster(room),
@@ -177,6 +194,20 @@ wss.on("connection", (ws) => {
             combo: room.combo,
           },
         });
+      }
+    } else if (m.type === "pickupCollect" && player.room) {
+      const room = rooms.get(player.room), item = room?.pickup;
+      if (!item || item.id !== String(m.id || "")) return;
+      if (Math.hypot(player.x - item.x, player.y - item.y) > 48) return;
+      room.pickup = null;
+      room.nextPickup = Date.now() + 38000 + Math.random() * 50000;
+      const effect = mysteryEffects[Math.floor(Math.random() * mysteryEffects.length)];
+      broadcast(room, { type: "pickupCollected", id: item.id, collector: player.id });
+      send(ws, { type: "pickupAward", id: item.id, effect });
+    } else if (m.type === "pickupDrop" && player.room) {
+      const room = rooms.get(player.room);
+      if (spawnSharedPickup(room, m.x, m.y, "bot"))
+        room.nextPickup = Date.now() + 38000 + Math.random() * 50000;
     } else if (m.type === "money" && player.room) {
       const room = rooms.get(player.room),
         requestedDelta = Number(m.delta),
@@ -292,6 +323,16 @@ const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "d
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
+    if (room.pickup && now >= room.pickup.expiresAt) {
+      const expiredId = room.pickup.id;
+      room.pickup = null;
+      room.nextPickup = now + 25000 + Math.random() * 35000;
+      broadcast(room, { type: "pickupExpired", id: expiredId });
+    } else if (room.started && !room.pickup && now >= room.nextPickup) {
+      spawnSharedPickup(room, 370 + Math.random() * 220, 100 + Math.random() * 350);
+    }
+    if (room.started && !room.pickup && room.event?.name === "PIOGGIA DI FICHES")
+      room.nextPickup = Math.min(room.nextPickup, now + 5000);
     if (room.event && now >= room.event.endsAt) {
       room.event = null;
       room.nextEvent = now + 50000 + Math.random() * 35000;

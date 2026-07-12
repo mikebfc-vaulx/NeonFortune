@@ -603,6 +603,7 @@ function connectMultiplayer() {
       status.textContent = "Scegli Pronto quando vuoi iniziare.";
       renderLobby();
       if (m.event) showEvent(m.event);
+      if (m.pickup) receiveSharedPickup(m.pickup);
     } else if (m.type === "playerJoined") {
       lobbyRoster.set(m.player.id, m.player);
       renderLobby();
@@ -615,6 +616,16 @@ function connectMultiplayer() {
     else if (m.type === "economy") applyEconomy(m, true);
     else if (m.type === "eventStart") showEvent(m.event);
     else if (m.type === "eventEnd") hideEvent();
+    else if (m.type === "pickupSpawn") {
+      receiveSharedPickup(m.pickup);
+      if (m.reason === "bot") toast("Il bot ha lasciato cadere un oggetto misterioso!");
+    }
+    else if (m.type === "pickupCollected" || m.type === "pickupExpired") {
+      if (!pickup || pickup.id === m.id) pickup = null;
+    } else if (m.type === "pickupAward") {
+      pickup = null;
+      collectLuck(m.effect, true);
+    }
     else if (m.type === "emote") {
       const until = performance.now() + 2200;
       if (m.id === myId) localEmote = { value: m.emote, until };
@@ -1341,12 +1352,14 @@ function punch(strength = 0) {
     }
     const mysteryDropChance = selectedAvatar === 3 ? 0.35 : 0.25;
     if (Math.random() < mysteryDropChance) {
-      pickup = {
-        x: Math.max(35, Math.min(925, bot.x)),
-        y: Math.max(85, Math.min(485, bot.y)),
-        ttl: 18,
-      };
-      toast("Il bot ha lasciato cadere un oggetto misterioso!");
+      const dropX = Math.max(35, Math.min(925, bot.x)),
+        dropY = Math.max(85, Math.min(485, bot.y));
+      if (currentRoom && socket?.readyState === WebSocket.OPEN)
+        socket.send(JSON.stringify({ type: "pickupDrop", x: dropX, y: dropY }));
+      else {
+        pickup = { x: dropX, y: dropY, ttl: 18 };
+        toast("Il bot ha lasciato cadere un oggetto misterioso!");
+      }
     }
   }
   if (bot || closest) trackMission("punch");
@@ -1456,6 +1469,17 @@ function drawLuck() {
   ctx.font = "bold 10px monospace";
   ctx.fillText(`${Math.ceil(pickup.ttl)}s`, pickup.x, pickup.y + 30);
 }
+function receiveSharedPickup(item) {
+  if (!item) return;
+  pickup = {
+    id: item.id,
+    x: item.x,
+    y: item.y,
+    expiresAt: item.expiresAt,
+    ttl: Math.max(0, (item.expiresAt - Date.now()) / 1000),
+    shared: true,
+  };
+}
 function drawPressure() {
   if (timeLeft > 60 || !playing) return;
   const p = 1 - timeLeft / 60,
@@ -1468,7 +1492,13 @@ function drawPressure() {
     ctx.fillRect(0, 0, 960, 540);
   }
 }
-function collectLuck() {
+function collectLuck(forcedType = null, serverAward = false) {
+  if (currentRoom && !serverAward) {
+    if (!pickup?.id || pickup.collecting || socket?.readyState !== WebSocket.OPEN) return;
+    pickup.collecting = true;
+    socket.send(JSON.stringify({ type: "pickupCollect", id: pickup.id }));
+    return;
+  }
   trackMission("collect");
   const effects = [
       "luck",
@@ -1481,7 +1511,7 @@ function collectLuck() {
       "speed",
       "slow",
     ],
-    type = effects[Math.floor(Math.random() * effects.length)];
+    type = forcedType || effects[Math.floor(Math.random() * effects.length)];
   let msg = "";
   if (type === "luck") {
     luckBoost = 0.12 + Math.random() * 0.1;
@@ -1600,7 +1630,7 @@ function loop(now) {
       moveModifierTime = Math.max(0, moveModifierTime - dt);
       if (!moveModifierTime) moveModifier = 1;
     }
-    if (!pickup) {
+    if (!currentRoom && !pickup) {
       spawnIn -= dt;
       if (spawnIn <= 0)
         pickup = {
@@ -1608,11 +1638,13 @@ function loop(now) {
           y: 100 + Math.random() * 350,
           ttl: 18,
         };
-    } else {
-      pickup.ttl -= dt;
+    } else if (pickup) {
+      pickup.ttl = pickup.shared
+        ? Math.max(0, (pickup.expiresAt - Date.now()) / 1000)
+        : pickup.ttl - dt;
       if (pickup.ttl <= 0) {
         pickup = null;
-        spawnIn = 25 + Math.random() * 35;
+        if (!currentRoom) spawnIn = 25 + Math.random() * 35;
       }
     }
     const activeTime = Math.max(luckTime, moveModifierTime),
