@@ -73,6 +73,47 @@ function spawnSharedPickup(room, x, y, reason = "random") {
   broadcast(room, { type: "pickupSpawn", pickup: room.pickup, reason });
   return true;
 }
+function thiefPosition(thief, now = Date.now()) {
+  const t = Math.max(0, (now - thief.spawnedAt) / 1000);
+  return { x: thief.x + thief.vx * t, y: thief.y + thief.vy * t };
+}
+function spawnThief(room) {
+  if (!room || room.thief) return;
+  const fromLeft = Math.random() < 0.5,
+    diagonal = Math.random() < 0.45,
+    speed = 125 + Math.random() * 55;
+  room.thief = {
+    id: Math.random().toString(36).slice(2, 10),
+    x: fromLeft ? -45 : 1005,
+    y: 105 + Math.random() * 330,
+    vx: (fromLeft ? 1 : -1) * speed,
+    vy: diagonal ? (Math.random() < 0.5 ? -1 : 1) * (22 + Math.random() * 28) : 0,
+    spawnedAt: Date.now(),
+    expiresAt: Date.now() + 9000,
+    stolen: false,
+  };
+  broadcast(room, { type: "thiefSpawn", thief: room.thief });
+}
+function thiefProgressBand(room) {
+  const progress = room?.goal > 0 ? Math.max(0, Math.min(1, room.money / room.goal)) : 0;
+  return progress >= 0.9 ? 3 : progress >= 0.7 ? 2 : progress >= 0.4 ? 1 : 0;
+}
+function scheduleNextThief(room, now = Date.now()) {
+  const band = thiefProgressBand(room),
+    ranges = [
+      [70000, 110000], // lontani: molto raro
+      [50000, 80000],
+      [30000, 50000],
+      [12000, 25000],  // vicini all'obiettivo: pressione alta
+    ],
+    [min, max] = ranges[band];
+  room.thiefBand = band;
+  room.nextThief = now + min + Math.random() * (max - min);
+}
+function refreshThiefSchedule(room, now = Date.now()) {
+  const band = thiefProgressBand(room);
+  if (band !== room.thiefBand && !room.thief) scheduleNextThief(room, now);
+}
 wss.on("connection", (ws) => {
   ws.isAlive = true;
   ws.on("pong", () => (ws.isAlive = true));
@@ -133,6 +174,9 @@ wss.on("connection", (ws) => {
           started: false,
           pickup: null,
           nextPickup: Date.now() + 12000 + Math.random() * 18000,
+          thief: null,
+          nextThief: Date.now() + 30000 + Math.random() * 20000,
+          thiefBand: 2,
         };
         rooms.set(roomCode, room);
       }
@@ -159,6 +203,7 @@ wss.on("connection", (ws) => {
         },
         event: room.event,
         pickup: room.pickup,
+        thief: room.thief,
       });
       broadcast(
         room,
@@ -208,6 +253,37 @@ wss.on("connection", (ws) => {
       const room = rooms.get(player.room);
       if (spawnSharedPickup(room, m.x, m.y, "bot"))
         room.nextPickup = Date.now() + 38000 + Math.random() * 50000;
+    } else if (m.type === "thiefHit" && player.room) {
+      const room = rooms.get(player.room), thief = room?.thief;
+      if (!thief || thief.stolen || thief.id !== String(m.id || "")) return;
+      const pos = thiefPosition(thief);
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 42) return;
+      thief.stolen = true;
+      const stolen = Math.min(room.money, Math.max(1, Math.floor(room.money * 0.05)));
+      thief.stolenAmount = stolen;
+      thief.victim = player.id;
+      thief.victimName = player.name;
+      room.money = Math.max(0, room.money - stolen);
+      broadcast(room, { type: "thiefStole", id: thief.id, victim: player.id, victimName: player.name, stolen });
+      broadcast(room, {
+        type: "economy", money: room.money, round: room.round, goal: room.goal,
+        combo: room.combo, levelUps: 0, actor: player.name, delta: -stolen, outcome: null,
+      });
+    } else if (m.type === "thiefPunch" && player.room) {
+      const room = rooms.get(player.room), thief = room?.thief;
+      if (!thief || !thief.stolen || thief.recovered || thief.id !== String(m.id || "")) return;
+      const pos = thiefPosition(thief);
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 95) return;
+      thief.recovered = true;
+      const recovered = Math.max(0, Number(thief.stolenAmount) || 0);
+      room.money = Math.min(MAX_ECONOMY, room.money + recovered);
+      room.thief = null;
+      scheduleNextThief(room);
+      broadcast(room, { type: "thiefRecovered", id: thief.id, hero: player.id, heroName: player.name, recovered });
+      broadcast(room, {
+        type: "economy", money: room.money, round: room.round, goal: room.goal,
+        combo: room.combo, levelUps: 0, actor: player.name, delta: recovered, outcome: null,
+      });
     } else if (m.type === "money" && player.room) {
       const room = rooms.get(player.room),
         requestedDelta = Number(m.delta),
@@ -229,6 +305,7 @@ wss.on("connection", (ws) => {
         room.round++;
         if (room.goal >= MAX_ECONOMY) break;
       }
+      refreshThiefSchedule(room);
       broadcast(room, {
         type: "economy",
         money: room.money,
@@ -323,6 +400,14 @@ const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "d
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
+    if (room.thief && now >= room.thief.expiresAt) {
+      const thiefId = room.thief.id;
+      room.thief = null;
+      scheduleNextThief(room, now);
+      broadcast(room, { type: "thiefGone", id: thiefId });
+    } else if (room.started && !room.thief && now >= room.nextThief) {
+      spawnThief(room);
+    }
     if (room.pickup && now >= room.pickup.expiresAt) {
       const expiredId = room.pickup.id;
       room.pickup = null;

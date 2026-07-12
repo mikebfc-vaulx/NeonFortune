@@ -88,6 +88,8 @@ const dynamicPhraseLocale = {
     ["Lobby avviata: tutti pronti!", "Lobby started: everyone is ready!"], ["Codice lobby copiato!", "Lobby code copied!"],
     ["Link invito copiato!", "Invite link copied!"], ["Puntata non valida", "Invalid bet"],
     ["Il bot ha lasciato cadere un oggetto misterioso!", "The bot dropped a mystery item!"],
+    ["Un ladro ti ha rubato il 5%", "A thief stole 5% from you"], ["Un ladro ha rubato", "A thief stole"],
+    ["Colpiscilo per recuperarli", "Hit him to get it back"], ["Fermalo", "Stop him"], ["Hai recuperato", "You recovered"], ["ha recuperato", "recovered"], ["dal ladro", "from the thief"],
     ["FORTUNA", "LUCK"], ["SFORTUNA", "BAD LUCK"], ["DONAZIONE LIVELLO", "LEVEL DONATION"],
     ["RAZZIA LIVELLO", "LEVEL RAID"], ["TEMPO EXTRA", "EXTRA TIME"], ["TEMPO RUBATO", "TIME STOLEN"],
     ["LENTEZZA", "SLOWDOWN"], ["Livello", "Level"], ["Nuovo obiettivo", "New target"],
@@ -107,6 +109,8 @@ const dynamicPhraseLocale = {
     ["Lobby avviata: tutti pronti!", "Salon lancé : tout le monde est prêt !"], ["Codice lobby copiato!", "Code du salon copié !"],
     ["Link invito copiato!", "Lien d'invitation copié !"], ["Puntata non valida", "Mise invalide"],
     ["Il bot ha lasciato cadere un oggetto misterioso!", "Le bot a laissé tomber un objet mystère !"],
+    ["Un ladro ti ha rubato il 5%", "Un voleur vous a volé 5 %"], ["Un ladro ha rubato", "Un voleur a volé"],
+    ["Colpiscilo per recuperarli", "Frappez-le pour les récupérer"], ["Fermalo", "Arrêtez-le"], ["Hai recuperato", "Vous avez récupéré"], ["ha recuperato", "a récupéré"], ["dal ladro", "au voleur"],
     ["FORTUNA", "CHANCE"], ["SFORTUNA", "MALCHANCE"], ["DONAZIONE LIVELLO", "DON DU NIVEAU"],
     ["RAZZIA LIVELLO", "RAID DU NIVEAU"], ["TEMPO EXTRA", "TEMPS SUPPLÉMENTAIRE"], ["TEMPO RUBATO", "TEMPS VOLÉ"],
     ["LENTEZZA", "RALENTISSEMENT"], ["Livello", "Niveau"], ["Nuovo obiettivo", "Nouvel objectif"],
@@ -126,6 +130,8 @@ const dynamicPhraseLocale = {
     ["Lobby avviata: tutti pronti!", "Lobby gestartet: Alle sind bereit!"], ["Codice lobby copiato!", "Lobby-Code kopiert!"],
     ["Link invito copiato!", "Einladungslink kopiert!"], ["Puntata non valida", "Ungültiger Einsatz"],
     ["Il bot ha lasciato cadere un oggetto misterioso!", "Der Bot hat einen geheimnisvollen Gegenstand fallen lassen!"],
+    ["Un ladro ti ha rubato il 5%", "Ein Dieb hat dir 5 % gestohlen"], ["Un ladro ha rubato", "Ein Dieb hat gestohlen"],
+    ["Colpiscilo per recuperarli", "Schlag ihn, um es zurückzuholen"], ["Fermalo", "Stoppe ihn"], ["Hai recuperato", "Du hast zurückgeholt"], ["ha recuperato", "hat zurückgeholt"], ["dal ladro", "vom Dieb"],
     ["FORTUNA", "GLÜCK"], ["SFORTUNA", "PECH"], ["DONAZIONE LIVELLO", "LEVEL-SPENDE"],
     ["RAZZIA LIVELLO", "LEVEL-RAUB"], ["TEMPO EXTRA", "EXTRAZEIT"], ["TEMPO RUBATO", "GESTOHLENE ZEIT"],
     ["LENTEZZA", "VERLANGSAMUNG"], ["Livello", "Level"], ["Nuovo obiettivo", "Neues Ziel"],
@@ -145,6 +151,8 @@ const dynamicPhraseLocale = {
     ["Lobby avviata: tutti pronti!", "Sala iniciada: ¡todos listos!"], ["Codice lobby copiato!", "¡Código de sala copiado!"],
     ["Link invito copiato!", "¡Enlace de invitación copiado!"], ["Puntata non valida", "Apuesta no válida"],
     ["Il bot ha lasciato cadere un oggetto misterioso!", "¡El bot soltó un objeto misterioso!"],
+    ["Un ladro ti ha rubato il 5%", "Un ladrón te robó el 5 %"], ["Un ladro ha rubato", "Un ladrón robó"],
+    ["Colpiscilo per recuperarli", "Golpéalo para recuperarlo"], ["Fermalo", "Detenlo"], ["Hai recuperato", "Has recuperado"], ["ha recuperato", "recuperó"], ["dal ladro", "del ladrón"],
     ["FORTUNA", "SUERTE"], ["SFORTUNA", "MALA SUERTE"], ["DONAZIONE LIVELLO", "DONACIÓN DE NIVEL"],
     ["RAZZIA LIVELLO", "SAQUEO DE NIVEL"], ["TEMPO EXTRA", "TIEMPO EXTRA"], ["TEMPO RUBATO", "TIEMPO ROBADO"],
     ["LENTEZZA", "LENTITUD"], ["Livello", "Nivel"], ["Nuovo obiettivo", "Nuevo objetivo"],
@@ -245,6 +253,7 @@ let luckBoost = 0,
   moveModifierTime = 0,
   effectName = "",
   pickup = null,
+  thief = null,
   spawnIn = 12 + Math.random() * 18;
 const player = { x: 480, y: 440, w: 24, h: 30, speed: 190 };
 const keys = {};
@@ -604,6 +613,7 @@ function connectMultiplayer() {
       renderLobby();
       if (m.event) showEvent(m.event);
       if (m.pickup) receiveSharedPickup(m.pickup);
+      if (m.thief) receiveThief(m.thief);
     } else if (m.type === "playerJoined") {
       lobbyRoster.set(m.player.id, m.player);
       renderLobby();
@@ -625,6 +635,20 @@ function connectMultiplayer() {
     } else if (m.type === "pickupAward") {
       pickup = null;
       collectLuck(m.effect, true);
+    } else if (m.type === "thiefSpawn") receiveThief(m.thief);
+    else if (m.type === "thiefStole") {
+      if (thief?.id === m.id) { thief.stolen = true; thief.stolenAmount = m.stolen; }
+      toast(m.victim === myId
+        ? `Un ladro ti ha rubato il 5%: -${fmt(m.stolen)}! Colpiscilo per recuperarli!`
+        : `Un ladro ha rubato ${fmt(m.stolen)} a ${m.victimName}! Fermalo!`);
+    } else if (m.type === "thiefRecovered") {
+      if (!thief || thief.id === m.id) thief = null;
+      toast(m.hero === myId
+        ? `Hai recuperato ${fmt(m.recovered)} dal ladro!`
+        : `${m.heroName} ha recuperato ${fmt(m.recovered)} dal ladro!`);
+    }
+    else if (m.type === "thiefGone") {
+      if (!thief || thief.id === m.id) thief = null;
     }
     else if (m.type === "emote") {
       const until = performance.now() + 2200;
@@ -730,6 +754,7 @@ $("#toggleRoomCode").onclick = toggleRoomCode;
 $("#toggleWaitingCode").onclick = toggleRoomCode;
 function returnToLobby() {
   playing = false;
+  thief = null;
   closeGame();
   currentRoom = null;
   isReady = false;
@@ -1328,6 +1353,15 @@ function punch(strength = 0) {
         strength,
       }),
     );
+  if (thief?.stolen && socket?.readyState === WebSocket.OPEN) {
+    const thiefDistance = Math.hypot(thief.x - player.x, thief.y - player.y),
+      thiefDot = (thief.x - player.x) * faceX + (thief.y - player.y) * faceY,
+      thiefRange = 72 + strength * 24;
+    if (thiefDistance < thiefRange && thiefDot > 0) {
+      socket.send(JSON.stringify({ type: "thiefPunch", id: thief.id, strength }));
+      impacts.push({ x: thief.x, y: thief.y, ttl: 0.45 });
+    }
+  }
   let bot = null;
   dist = 67 + strength * 20;
   npcs.forEach((n) => {
@@ -1480,6 +1514,51 @@ function receiveSharedPickup(item) {
     shared: true,
   };
 }
+function receiveThief(data) {
+  if (!data) return;
+  thief = { ...data, contacted: false, x: data.x, y: data.y };
+}
+function updateThief() {
+  if (!thief) return;
+  const elapsed = Math.max(0, (Date.now() - thief.spawnedAt) / 1000);
+  // Preserve the original spawn point once, avoiding cumulative movement.
+  if (thief.originX == null) { thief.originX = thief.x; thief.originY = thief.y; }
+  thief.x = thief.originX + thief.vx * elapsed;
+  thief.y = thief.originY + thief.vy * elapsed;
+  if (Date.now() >= thief.expiresAt) { thief = null; return; }
+  if (!thief.contacted && Math.hypot(player.x - thief.x, player.y - thief.y) < 34) {
+    thief.contacted = true;
+    if (currentRoom && socket?.readyState === WebSocket.OPEN)
+      socket.send(JSON.stringify({ type: "thiefHit", id: thief.id }));
+  }
+}
+function drawThief() {
+  if (!thief) return;
+  const bob = Math.sin(performance.now() / 85) * 2;
+  ctx.save();
+  ctx.translate(thief.x, thief.y + bob);
+  if (thief.vx < 0) ctx.scale(-1, 1);
+  ctx.fillStyle = "#090711";
+  ctx.fillRect(-9, 20, 7, 13); ctx.fillRect(3, 20, 7, 13);
+  ctx.fillStyle = "#24202c";
+  ctx.fillRect(-12, 1, 24, 22);
+  ctx.fillStyle = "#d39a73";
+  ctx.fillRect(-9, -12, 18, 14);
+  ctx.fillStyle = "#111";
+  ctx.fillRect(-10, -9, 20, 6);
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(-6, -7, 4, 2); ctx.fillRect(3, -7, 4, 2);
+  ctx.fillStyle = "#b48b38";
+  ctx.fillRect(11, 5, 13, 18);
+  ctx.fillStyle = "#ffd166";
+  ctx.font = "bold 11px monospace";
+  ctx.textAlign = "center";
+  ctx.fillText("$", 17, 18);
+  ctx.fillStyle = "#ef476f";
+  ctx.font = "bold 9px monospace";
+  ctx.fillText("LADRO", 0, -19);
+  ctx.restore();
+}
 function drawPressure() {
   if (timeLeft > 60 || !playing) return;
   const p = 1 - timeLeft / 60,
@@ -1618,6 +1697,7 @@ function loop(now) {
       spawnIn = Math.min(spawnIn, 5);
   }
   if (playing) {
+    updateThief();
     updateNpcs(dt * (globalEvent?.name === "MODALITÀ CAOS" ? 1.8 : 1));
     punchTime = Math.max(0, punchTime - dt);
     punchCooldown = Math.max(0, punchCooldown - dt);
@@ -1732,6 +1812,7 @@ function loop(now) {
     .slice()
     .sort((a, b) => a.y - b.y)
     .forEach(drawNpc);
+  drawThief();
   remotePlayers.forEach(drawRemotePlayer);
   drawLuck();
   drawPlayer();
@@ -2879,6 +2960,7 @@ $("#restart").onclick = () => {
   moveModifierTime = 0;
   effectName = "";
   pickup = null;
+  thief = null;
   spawnIn = 12 + Math.random() * 18;
   playing = true;
   player.x = 480;
