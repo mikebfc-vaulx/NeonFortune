@@ -429,6 +429,10 @@ canvas {
   width: 100%;
   image-rendering: pixelated;
   background: #161029;
+  touch-action: none;
+}
+.mobile-controls {
+  display: none;
 }
 .controls {
   position: absolute;
@@ -979,26 +983,41 @@ button,
 @media (max-width: 720px) {
   body {
     overflow: auto;
+    overscroll-behavior: none;
+  }
+  #game-shell {
+    padding: 4px;
   }
   .hud {
     height: auto;
     flex-wrap: wrap;
+    gap: 5px;
+    padding: 7px;
   }
   .brand {
-    width: 100%;
+    width: auto;
+    flex: 1 1 100%;
+    font-size: 10px;
+  }
+  .brand img {
+    width: 30px;
+    height: 30px;
   }
   .stat {
     min-width: 28%;
+    padding: 5px;
   }
   .stat strong {
     font-size: 15px;
   }
   .controls {
-    font-size: 8px;
+    display: none;
   }
   .game-panel {
     padding: 20px;
     padding-top: 72px;
+    max-height: 94dvh;
+    overflow: auto;
   }
   .mini-balance {
     left: 20px;
@@ -1023,6 +1042,80 @@ button,
   .chip {
     width: 40px;
     height: 40px;
+  }
+  .language-picker {
+    top: 4px;
+    right: 4px;
+    gap: 2px;
+    padding: 3px;
+  }
+  .language-picker button {
+    width: 29px;
+    height: 25px;
+    font-size: 16px;
+  }
+  .room-bar {
+    padding: 5px;
+    font-size: 9px;
+  }
+  .room-bar button {
+    margin: 3px;
+    padding: 5px;
+  }
+  .casino-wrap {
+    margin-top: 5px;
+    border-width: 3px;
+  }
+  .side-hud {
+    display: none;
+  }
+  .mobile-controls {
+    position: fixed;
+    z-index: 4;
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    pointer-events: none;
+  }
+  .mobile-controls button {
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    border: 2px solid #ffd166;
+    color: white;
+    background: #17122bdd;
+    box-shadow: 3px 3px #05030b;
+    font-weight: bold;
+  }
+  .mobile-dpad {
+    display: grid;
+    grid-template: repeat(3, 44px) / repeat(3, 44px);
+  }
+  .mobile-dpad button {
+    font-size: 18px;
+  }
+  .mobile-dpad .up { grid-area: 1 / 2; }
+  .mobile-dpad .left { grid-area: 2 / 1; }
+  .mobile-dpad .down { grid-area: 2 / 2; }
+  .mobile-dpad .right { grid-area: 2 / 3; }
+  .mobile-actions {
+    display: flex;
+    gap: 9px;
+    align-items: end;
+  }
+  .mobile-actions button {
+    width: 68px;
+    height: 54px;
+    font-size: 10px;
+  }
+  .mobile-actions .touch-punch {
+    height: 72px;
+    border-color: #ef476f;
+    background: #7f203ddd;
   }
 }
 .event-banner {

@@ -10,6 +10,38 @@ const translations = {
   de: { intro:"Erstelle eine private Lobby oder tritt mit dem Code eines Freundes bei.", player:"SPIELERNAME", avatar:"AVATAR", create:"LOBBY ERSTELLEN", or:"ODER", code:"CODE", join:"BEITRETEN", ready:"ICH BIN BEREIT", waiting:"Das Spiel beginnt, wenn alle bereit sind.", virtualTitle:"NUR VIRTUELLE WÄHRUNG", virtualText:"Keine Einzahlungen, Auszahlungen oder Echtgeldpreise. Das Spielguthaben hat keinen Geldwert und ist nicht konvertierbar.", terms:"Bedingungen", balance:"GUTHABEN", objective:"ZIEL", time:"ZEIT", players:"SPIELER", copy:"CODE KOPIEREN", back:"ZURÜCK ZUR LOBBY", prompt:"Drücke <b>E</b> zum Spielen", controls:"WASD: bewegen · E: spielen · LEERTASTE: schlagen · 1–5: Emote", mission:"MISSION", skill:"FÄHIGKEIT", combo:"TEAM-KOMBO", soundOn:"♪ AUDIO AN", soundOff:"× AUDIO AUS" },
   es: { intro:"Crea una sala privada o entra con el código de un amigo.", player:"NOMBRE DEL JUGADOR", avatar:"AVATAR", create:"CREAR SALA", or:"O", code:"CÓDIGO", join:"ENTRAR", ready:"ESTOY LISTO", waiting:"La partida comienza cuando todos están listos.", virtualTitle:"SOLO MONEDA VIRTUAL", virtualText:"Sin depósitos, retiros ni premios en dinero real. El saldo del juego no tiene valor monetario ni es convertible.", terms:"Términos", balance:"SALDO", objective:"OBJETIVO", time:"TIEMPO", players:"JUGADORES", copy:"COPIAR CÓDIGO", back:"VOLVER A LA SALA", prompt:"Pulsa <b>E</b> para jugar", controls:"WASD: moverse · E: jugar · ESPACIO: golpear · 1–5: emoticono", mission:"MISIÓN", skill:"HABILIDAD", combo:"COMBO DE EQUIPO", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" }
 };
+const gameLocale = {
+  it: {
+    tables: { blackjack:"BLACKJACK", roulette:"ROULETTE", dice:"DADI", horses:"CORSA CAVALLI", slots:"SLOT MACHINE", plinko:"PLINKO", fortune:"RUOTA FORTUNA" },
+    blackjack:["BLACKJACK","Arriva a 21 senza superarlo. Il blackjack paga 3:2."], roulette:["ROULETTE EUROPEA","Scegli una fiche, piazzala sul tabellone e gira."], slots:["SLOT MACHINE","I tre rulli girano e si fermano uno alla volta."], fortune:["RUOTA DELLA FORTUNA","40% favorevole al giocatore · 60% favorevole al banco."], dice:["TAVOLO DEI DADI","Punta sulla somma di due dadi: basso, sette oppure alto."], plinko:["PLINKO","Ogni clic lancia una nuova pallina. Più rischio significa premi maggiori e centro peggiore."], horses:["CORSA DEI CAVALLI","Scegli il vincitore. La gara dura 10 secondi su un rettilineo."]
+  },
+  en: {
+    tables: { blackjack:"BLACKJACK", roulette:"ROULETTE", dice:"DICE", horses:"HORSE RACE", slots:"SLOT MACHINE", plinko:"PLINKO", fortune:"FORTUNE WHEEL" },
+    blackjack:["BLACKJACK","Reach 21 without going over. Blackjack pays 3:2."], roulette:["EUROPEAN ROULETTE","Choose a chip, place it on the board and spin."], slots:["SLOT MACHINE","The three reels spin and stop one at a time."], fortune:["FORTUNE WHEEL","40% player-favourable · 60% house-favourable."], dice:["DICE TABLE","Bet on the sum of two dice: low, seven or high."], plinko:["PLINKO","Each click drops a new ball. Higher risk means bigger prizes and a worse centre."], horses:["HORSE RACE","Choose the winner. The race lasts 10 seconds on a straight track."]
+  },
+  fr: {
+    tables: { blackjack:"BLACKJACK", roulette:"ROULETTE", dice:"DÉS", horses:"COURSE HIPPIQUE", slots:"MACHINE À SOUS", plinko:"PLINKO", fortune:"ROUE DE LA FORTUNE" },
+    blackjack:["BLACKJACK","Atteignez 21 sans le dépasser. Le blackjack paie 3:2."], roulette:["ROULETTE EUROPÉENNE","Choisissez un jeton, placez-le sur le tapis puis lancez la roue."], slots:["MACHINE À SOUS","Les trois rouleaux tournent et s'arrêtent l'un après l'autre."], fortune:["ROUE DE LA FORTUNE","40 % favorable au joueur · 60 % favorable à la maison."], dice:["TABLE DE DÉS","Pariez sur la somme de deux dés : bas, sept ou haut."], plinko:["PLINKO","Chaque clic lance une balle. Plus de risque signifie de plus gros prix et un centre moins favorable."], horses:["COURSE HIPPIQUE","Choisissez le gagnant. La course dure 10 secondes en ligne droite."]
+  },
+  de: {
+    tables: { blackjack:"BLACKJACK", roulette:"ROULETTE", dice:"WÜRFEL", horses:"PFERDERENNEN", slots:"SPIELAUTOMAT", plinko:"PLINKO", fortune:"GLÜCKSRAD" },
+    blackjack:["BLACKJACK","Erreiche 21, ohne sie zu überschreiten. Blackjack zahlt 3:2."], roulette:["EUROPÄISCHES ROULETTE","Wähle einen Chip, setze ihn auf das Tableau und drehe."], slots:["SPIELAUTOMAT","Die drei Walzen drehen sich und stoppen nacheinander."], fortune:["GLÜCKSRAD","40 % zugunsten des Spielers · 60 % zugunsten der Bank."], dice:["WÜRFELTISCH","Setze auf die Summe zweier Würfel: niedrig, sieben oder hoch."], plinko:["PLINKO","Jeder Klick wirft eine neue Kugel. Mehr Risiko bedeutet höhere Preise und eine schlechtere Mitte."], horses:["PFERDERENNEN","Wähle den Sieger. Das Rennen dauert 10 Sekunden auf einer geraden Strecke."]
+  },
+  es: {
+    tables: { blackjack:"BLACKJACK", roulette:"RULETA", dice:"DADOS", horses:"CARRERA DE CABALLOS", slots:"TRAGAPERRAS", plinko:"PLINKO", fortune:"RULETA DE LA FORTUNA" },
+    blackjack:["BLACKJACK","Llega a 21 sin pasarte. El blackjack paga 3:2."], roulette:["RULETA EUROPEA","Elige una ficha, colócala en el tablero y gira."], slots:["TRAGAPERRAS","Los tres rodillos giran y se detienen uno a uno."], fortune:["RULETA DE LA FORTUNA","40 % favorable al jugador · 60 % favorable a la casa."], dice:["MESA DE DADOS","Apuesta por la suma de dos dados: bajo, siete o alto."], plinko:["PLINKO","Cada clic lanza una bola nueva. Más riesgo significa premios mayores y un centro peor."], horses:["CARRERA DE CABALLOS","Elige al ganador. La carrera dura 10 segundos en una pista recta."]
+  }
+};
+const gameWords = {
+  en:{"SALDO DISPONIBILE":"AVAILABLE BALANCE","EFFETTI ATTIVI":"ACTIVE EFFECTS","LA TUA MANO":"YOUR HAND","Scegli la puntata e gioca.":"Choose your bet and play.","GIOCA":"PLAY","CARTA":"HIT","RADDOPPIA":"DOUBLE","STAI":"STAND","ROSSO":"RED","NERO":"BLACK","PARI":"EVEN","DISPARI":"ODD","Fiches piazzate: $0":"Chips placed: $0","RITIRA FICHES":"CLEAR CHIPS","GIRA":"SPIN","Tenta la fortuna!":"Try your luck!","Scegli un risultato e lancia.":"Choose an outcome and roll.","BASSO":"LOW","SETTE":"SEVEN","ALTO":"HIGH","LANCIA":"ROLL","FACILE":"EASY","MEDIO":"MEDIUM","DIFFICILE":"HARD","LANCIA PALLINA":"DROP BALL","Scegli un cavallo e avvia la corsa.":"Choose a horse and start the race.","CORRI":"RACE"},
+  fr:{"SALDO DISPONIBILE":"SOLDE DISPONIBLE","EFFETTI ATTIVI":"EFFETS ACTIFS","LA TUA MANO":"VOTRE MAIN","Scegli la puntata e gioca.":"Choisissez votre mise et jouez.","GIOCA":"JOUER","CARTA":"CARTE","RADDOPPIA":"DOUBLER","STAI":"RESTER","ROSSO":"ROUGE","NERO":"NOIR","PARI":"PAIR","DISPARI":"IMPAIR","Fiches piazzate: $0":"Jetons placés : $0","RITIRA FICHES":"RETIRER LES JETONS","GIRA":"TOURNER","Tenta la fortuna!":"Tentez votre chance !","Scegli un risultato e lancia.":"Choisissez un résultat et lancez.","BASSO":"BAS","SETTE":"SEPT","ALTO":"HAUT","LANCIA":"LANCER","FACILE":"FACILE","MEDIO":"MOYEN","DIFFICILE":"DIFFICILE","LANCIA PALLINA":"LANCER UNE BALLE","Scegli un cavallo e avvia la corsa.":"Choisissez un cheval et lancez la course.","CORRI":"COURIR"},
+  de:{"SALDO DISPONIBILE":"VERFÜGBARES GUTHABEN","EFFETTI ATTIVI":"AKTIVE EFFEKTE","LA TUA MANO":"DEINE HAND","Scegli la puntata e gioca.":"Wähle deinen Einsatz und spiele.","GIOCA":"SPIELEN","CARTA":"KARTE","RADDOPPIA":"VERDOPPELN","STAI":"HALTEN","ROSSO":"ROT","NERO":"SCHWARZ","PARI":"GERADE","DISPARI":"UNGERADE","Fiches piazzate: $0":"Gesetzte Chips: $0","RITIRA FICHES":"CHIPS LÖSCHEN","GIRA":"DREHEN","Tenta la fortuna!":"Versuche dein Glück!","Scegli un risultato e lancia.":"Wähle ein Ergebnis und würfle.","BASSO":"NIEDRIG","SETTE":"SIEBEN","ALTO":"HOCH","LANCIA":"WÜRFELN","FACILE":"LEICHT","MEDIO":"MITTEL","DIFFICILE":"SCHWER","LANCIA PALLINA":"KUGEL WERFEN","Scegli un cavallo e avvia la corsa.":"Wähle ein Pferd und starte das Rennen.","CORRI":"START"},
+  es:{"SALDO DISPONIBILE":"SALDO DISPONIBLE","EFFETTI ATTIVI":"EFECTOS ACTIVOS","LA TUA MANO":"TU MANO","Scegli la puntata e gioca.":"Elige tu apuesta y juega.","GIOCA":"JUGAR","CARTA":"CARTA","RADDOPPIA":"DOBLAR","STAI":"PLANTARSE","ROSSO":"ROJO","NERO":"NEGRO","PARI":"PAR","DISPARI":"IMPAR","Fiches piazzate: $0":"Fichas colocadas: $0","RITIRA FICHES":"RETIRAR FICHAS","GIRA":"GIRAR","Tenta la fortuna!":"¡Prueba tu suerte!","Scegli un risultato e lancia.":"Elige un resultado y lanza.","BASSO":"BAJO","SETTE":"SIETE","ALTO":"ALTO","LANCIA":"LANZAR","FACILE":"FÁCIL","MEDIO":"MEDIO","DIFFICILE":"DIFÍCIL","LANCIA PALLINA":"LANZAR BOLA","Scegli un cavallo e avvia la corsa.":"Elige un caballo e inicia la carrera.","CORRI":"CORRER"}
+};
+const mobileLabels = {
+  it:["GIOCA","PUGNO"], en:["PLAY","PUNCH"], fr:["JOUER","FRAPPER"],
+  de:["SPIELEN","SCHLAG"], es:["JUGAR","GOLPEAR"]
+};
 let currentLanguage = "it";
 function setLanguage(lang) {
   if (!translations[lang]) lang = "it";
@@ -28,6 +60,13 @@ function setLanguage(lang) {
   $("#prompt").innerHTML = t.prompt; set(".mission-box small", t.mission); set(".role-box small", t.skill); set(".combo-box small", t.combo);
   const roomText = [...$("#roomBar").childNodes].find((n) => n.nodeType === 3 && /GIOCATORI|PLAYERS|JOUEURS|SPIELER|JUGADORES/.test(n.nodeValue)); if (roomText) roomText.nodeValue = ` ${t.players} `;
   $("#lobbySound").textContent = musicOn ? t.soundOn : t.soundOff;
+  const mobileText = mobileLabels[lang];
+  if (mobileText) { set("#touchPlay", mobileText[0]); set("#touchPunch", mobileText[1]); }
+  if (typeof activeGameId !== "undefined" && activeGameId && modalOpen) {
+    const localized = gameLocale[lang]?.[activeGameId];
+    if (localized) { set(".game-title", localized[0]); set(".subtitle", localized[1]); }
+    translateGameMarkup();
+  }
 }
 const moneyEl = $("#money"),
   goalEl = $("#goal"),
@@ -891,7 +930,8 @@ function drawStation(s) {
       ctx.stroke();
     }
   }
-  neon(s.name, cx, s.y + 99, "#fff", 10);
+  const translatedName = gameLocale[currentLanguage]?.tables?.[s.id] || s.name;
+  neon(translatedName, cx, s.y + 99, "#fff", translatedName.length > 14 ? 8 : 10);
 }
 function drawSkin(x, y, avatar, name, punch = false, fx = 1, fy = 0) {
   const suits = ["#39e6d0", "#8f6cff", "#b86b32", "#ef476f"],
@@ -1430,14 +1470,26 @@ function end(reason) {
   $("#end-screen").classList.remove("hidden");
 }
 
+function beginPunchCharge() {
+  if (modalOpen || punchCooldown > 0 || !playing) return;
+  chargingPunch = true;
+  punchCharge = 0;
+  $("#chargeMeter").classList.remove("hidden");
+}
+function releasePunchCharge() {
+  if (!chargingPunch) return;
+  chargingPunch = false;
+  $("#chargeMeter").classList.add("hidden");
+  punch(punchCharge / 1.5);
+  punchCharge = 0;
+  $("#chargeFill").style.width = "0%";
+}
 addEventListener("keydown", (e) => {
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   keys[key] = true;
   if (e.code === "Space" && !e.repeat && !modalOpen && punchCooldown <= 0) {
     e.preventDefault();
-    chargingPunch = true;
-    punchCharge = 0;
-    $("#chargeMeter").classList.remove("hidden");
+    beginPunchCharge();
   }
   if (/^[1-5]$/.test(e.key) && socket?.readyState === WebSocket.OPEN)
     socket.send(JSON.stringify({ type: "emote", emote: +e.key - 1 }));
@@ -1447,14 +1499,34 @@ addEventListener("keydown", (e) => {
 addEventListener("keyup", (e) => {
   const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
   keys[key] = false;
-  if (e.code === "Space" && chargingPunch) {
-    chargingPunch = false;
-    $("#chargeMeter").classList.add("hidden");
-    punch(punchCharge / 1.5);
-    punchCharge = 0;
-    $("#chargeFill").style.width = "0%";
-  }
+  if (e.code === "Space") releasePunchCharge();
 });
+document.querySelectorAll("[data-move]").forEach((button) => {
+  const stop = (e) => { e.preventDefault(); keys[button.dataset.move] = false; };
+  button.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    button.setPointerCapture?.(e.pointerId);
+    keys[button.dataset.move] = true;
+    startMusic();
+  });
+  button.addEventListener("pointerup", stop);
+  button.addEventListener("pointercancel", stop);
+  button.addEventListener("lostpointercapture", stop);
+});
+$("#touchPlay").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  const station = nearby();
+  if (station && !modalOpen) openGame(station.id);
+  else if (!station) toast(currentLanguage === "it" ? "Avvicinati a un tavolo" : "Move closer to a table");
+});
+$("#touchPunch").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.currentTarget.setPointerCapture?.(e.pointerId);
+  beginPunchCharge();
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach((type) =>
+  $("#touchPunch").addEventListener(type, (e) => { e.preventDefault(); releasePunchCharge(); }),
+);
 canvas.addEventListener("click", (e) => {
   const r = canvas.getBoundingClientRect(),
     x = ((e.clientX - r.left) * 960) / r.width,
@@ -1477,14 +1549,35 @@ function closeGame() {
 }
 function openGame(id) {
   if (!playing) return;
+  activeGameId = id;
   modalOpen = true;
   $("#modal").classList.remove("hidden");
   ({ blackjack, roulette, horses, slots, fortune, dice, plinko })[id]();
 }
+let activeGameId = null;
+function translateGameMarkup() {
+  const words = gameWords[currentLanguage] || {}, root = $("#game-content");
+  if (!root) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    const value = node.nodeValue.trim();
+    let canonical = value;
+    for (const languageWords of Object.values(gameWords)) {
+      const match = Object.entries(languageWords).find(([, translated]) => translated === value);
+      if (match) { canonical = match[0]; break; }
+    }
+    const translated = currentLanguage === "it" ? canonical : words[canonical];
+    if (translated && translated !== value)
+      node.nodeValue = node.nodeValue.replace(value, translated);
+  }
+}
 function base(title, sub, body) {
   const activeEffect = effectSummary();
+  const localized = gameLocale[currentLanguage]?.[activeGameId];
   $("#game-content").innerHTML =
-    `<div class="mini-balance"><span>SALDO DISPONIBILE</span><strong id="miniBalance">${fmt(money)}</strong></div><div id="miniEffect" class="mini-effect ${activeEffect ? "" : "hidden"}"><span>EFFETTI ATTIVI</span><strong>${activeEffect}</strong></div><h2 class="game-title">${title}</h2><p class="subtitle">${sub}</p>${body}`;
+    `<div class="mini-balance"><span>SALDO DISPONIBILE</span><strong id="miniBalance">${fmt(money)}</strong></div><div id="miniEffect" class="mini-effect ${activeEffect ? "" : "hidden"}"><span>EFFETTI ATTIVI</span><strong>${activeEffect}</strong></div><h2 class="game-title">${localized?.[0] || title}</h2><p class="subtitle">${localized?.[1] || sub}</p>${body}`;
+  translateGameMarkup();
 }
 function effectSummary() {
   const effects = [];
