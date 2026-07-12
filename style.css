@@ -1827,45 +1827,109 @@ button,
 /* Fascia di stato separata dalla mappa: evento al centro, obiettivi a destra. */
 .game-status-strip {
   position: relative;
-  min-height: 76px;
+  min-height: 82px;
+  height: 82px;
   margin-top: 6px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 280px) minmax(330px, 420px);
   align-items: center;
   gap: 12px;
+  overflow: visible;
 }
 .game-status-strip .event-banner {
+  grid-column: 1;
+  grid-row: 1;
   position: static;
   justify-self: center;
+  max-width: 100%;
   margin: 0;
 }
+.game-status-strip .toast {
+  grid-column: 2;
+  grid-row: 1;
+  position: static;
+  z-index: 10;
+  justify-self: center;
+  width: min(100%, 280px);
+  transform: none;
+  padding: 11px 13px;
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.35;
+}
 .game-status-strip .side-hud {
+  grid-column: 3;
+  grid-row: 1;
   position: static;
   width: 100%;
+  height: 78px;
   transform: none;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 3px;
+  align-self: center;
 }
 .game-status-strip .side-hud-label {
   grid-column: 1 / -1;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+.game-status-strip .side-hud > :not(.side-hud-label) {
+  min-height: 56px;
+  height: 56px;
+  overflow: hidden;
 }
 .game-status-strip + .casino-wrap {
   margin-top: 4px;
 }
+@media (min-width: 721px) and (max-width: 900px) {
+  .game-status-strip {
+    grid-template-columns: minmax(140px, 1fr) minmax(140px, 180px) minmax(300px, 340px);
+    gap: 6px;
+  }
+  .game-status-strip .event-banner {
+    padding: 9px 10px;
+    font-size: 8px;
+  }
+  .game-status-strip .toast {
+    padding: 8px;
+    font-size: 8px;
+  }
+  .game-status-strip .side-hud strong { font-size: 8px; }
+  .game-status-strip .side-hud small,
+  .game-status-strip .side-hud span { font-size: 6px; }
+}
 @media (max-width: 720px) {
   .game-status-strip {
-    min-height: 0;
+    min-height: 122px;
+    height: 122px;
     grid-template-columns: 1fr;
+    grid-template-rows: 58px 30px 30px;
     gap: 4px;
   }
   .game-status-strip .event-banner {
+    grid-column: 1;
+    grid-row: 3;
+    font-size: 8px;
+  }
+  .game-status-strip .toast {
+    grid-column: 1;
     grid-row: 2;
+    width: min(94%, 330px);
+    padding: 8px 10px;
     font-size: 8px;
   }
   .game-status-strip .side-hud {
+    grid-column: 1;
     grid-row: 1;
     width: 100%;
+    height: 58px;
+  }
+  .game-status-strip .side-hud-label { height: 14px; }
+  .game-status-strip .side-hud > :not(.side-hud-label) {
+    min-height: 41px;
+    height: 41px;
   }
 }
 
