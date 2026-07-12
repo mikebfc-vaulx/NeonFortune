@@ -229,6 +229,8 @@ function setLanguage(lang) {
   set(".touch-move-hint", mobileHints[lang]);
   set("#waitingRoom small", profileLocale[lang][1]);
   set("#copyInvite", {it:"COPIA LINK INVITO",en:"COPY INVITE LINK",fr:"COPIER LE LIEN",de:"EINLADUNG KOPIEREN",es:"COPIAR ENLACE"}[lang]);
+  set("#cancelLobby", {it:"TORNA AL MENU",en:"BACK TO MENU",fr:"RETOUR AU MENU",de:"ZURÜCK ZUM MENÜ",es:"VOLVER AL MENÚ"}[lang]);
+  set("#endToLobby", {it:"TORNA ALLA LOBBY",en:"BACK TO LOBBY",fr:"RETOUR AU SALON",de:"ZURÜCK ZUR LOBBY",es:"VOLVER A LA SALA"}[lang]);
   if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
   if (typeof lobbyRoster !== "undefined") renderLobby();
   if (typeof selectedAvatar !== "undefined") setRole();
@@ -546,7 +548,7 @@ function applyEconomy(e, announce = false) {
   if (money > 0) {
     clearTimeout(bankruptcyTimer);
     bankruptcyTimer = null;
-  } else if (playing && pendingOutcomes === 0 && !bankruptcyTimer) {
+  } else if (e.outcome !== "bet" && playing && pendingOutcomes === 0 && !bankruptcyTimer) {
     bankruptcyTimer = setTimeout(() => {
       bankruptcyTimer = null;
       if (money <= 0 && pendingOutcomes === 0 && playing)
@@ -783,12 +785,14 @@ function returnToLobby() {
   $("#lobbyStatus").textContent = "Sei tornato al menu principale.";
   restartMusic();
 }
-$("#leaveRoom").onclick = () => {
+function requestLeaveRoom() {
   if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
   $("#leaveRoom").disabled = true;
   socket.send(JSON.stringify({ type: "leave" }));
   setTimeout(() => ($("#leaveRoom").disabled = false), 800);
-};
+}
+$("#leaveRoom").onclick = requestLeaveRoom;
+$("#cancelLobby").onclick = requestLeaveRoom;
 let profileUpdateTimer = null;
 function syncLobbyProfile() {
   if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
@@ -1078,7 +1082,8 @@ function changeMoney(n, outcome = null, wager = null) {
   }
   if (money >= goal) advanceLevel();
   sync();
-  if (money <= 0) end("Hai perso tutto il tuo denaro. Il casinò vince.");
+  if (money <= 0 && outcome !== "bet")
+    end("Hai perso tutto il tuo denaro. Il casinò vince.");
 }
 function betValue() {
   const el = $("#bet");
@@ -2187,7 +2192,7 @@ function blackjack() {
   q("#deal").onclick = () => {
     b = betValue();
     if (!b) return;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     dk = deck();
     h = [dk.pop()];
     h.push(luckyCard(h, dk));
@@ -2210,7 +2215,7 @@ function blackjack() {
   };
   q("#double").onclick = () => {
     if (!active || h.length !== 2 || money < b) return;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     b *= 2;
     doubled = true;
     h.push(luckyCard(h, dk));
@@ -2287,7 +2292,7 @@ function roulette() {
   $("#spinRoulette").onclick = () => {
     if (spinning || !total) return toast("Piazza almeno una fiche");
     spinning = true;
-    changeMoney(-total);
+    changeMoney(-total, "bet");
     let n = Math.floor(Math.random() * 37);
     if (lucky()) {
       const k =
@@ -2373,7 +2378,7 @@ function slots() {
   btn.onclick = () => {
     const b = betValue();
     if (!b || btn.disabled) return;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     btn.disabled = true;
     $("#result").textContent = "I rulli stanno girando...";
     let grid = Array.from({ length: 3 }, () => Array.from({ length: 5 }, randomSymbol));
@@ -2435,7 +2440,7 @@ function fortune() {
     const btn = $("#fortuneSpin"),
       b = betValue();
     if (!b || btn.disabled) return;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     btn.disabled = true;
     document
       .querySelectorAll("[data-wheel-index]")
@@ -2494,7 +2499,7 @@ function dice() {
     const b = betValue();
     if (!b || !pick || rolling) return;
     rolling = true;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     document
       .querySelectorAll(".dice-pick,#rollDice")
       .forEach((x) => (x.disabled = true));
@@ -2685,7 +2690,7 @@ function plinko() {
     localAvailable -= b;
     pendingOutcomes++;
     beginLaunchCooldown();
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     document.querySelectorAll(".risk-pick").forEach((x) => (x.disabled = true));
     let dirs = Array.from({ length: 8 }, () => (Math.random() < 0.5 ? -1 : 1));
     if (lucky()) {
@@ -2860,7 +2865,7 @@ function poker() {
   $("#pdeal").onclick = () => {
     b = betValue();
     if (!b) return;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     dk = deck();
     hero = [dk.pop(), dk.pop()];
     dealer = [dk.pop(), dk.pop()];
@@ -2931,7 +2936,7 @@ function horses() {
     const b = betValue();
     if (!b) return;
     running = true;
-    changeMoney(-b);
+    changeMoney(-b, "bet");
     document
       .querySelectorAll(".horse-pick,#race")
       .forEach((x) => (x.disabled = true));
@@ -2982,24 +2987,9 @@ function horses() {
   };
 }
 
-$("#restart").onclick = () => {
-  money = 1000;
-  goal = 1300;
-  round = 1;
-  timeLeft = 300;
-  luckBoost = 0;
-  luckTime = 0;
-  moveModifier = 1;
-  moveModifierTime = 0;
-  effectName = "";
-  pickup = null;
-  thief = null;
-  spawnIn = 12 + Math.random() * 18;
-  playing = true;
-  player.x = 480;
-  player.y = 440;
-  $("#end-screen").classList.add("hidden");
-  sync();
+$("#endToLobby").onclick = () => {
+  if (currentRoom && socket?.readyState === WebSocket.OPEN) requestLeaveRoom();
+  else returnToLobby();
 };
 document.querySelectorAll("#languagePicker button").forEach(
   (button) => (button.onclick = () => setLanguage(button.dataset.lang)),

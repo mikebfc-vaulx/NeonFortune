@@ -282,6 +282,12 @@ body:after {
   background: #ef476f;
   box-shadow: 4px 4px #7f203c;
 }
+.waiting-room > button.menu-return {
+  margin-top: 9px;
+  color: white;
+  background: #ef476f;
+  box-shadow: 4px 4px #7f203c;
+}
 .waiting-room small {
   display: block;
   margin-top: 10px;
