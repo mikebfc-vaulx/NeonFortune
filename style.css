@@ -37,6 +37,8 @@ body:after {
 }
 .lobby-card {
   width: min(92vw, 540px);
+  max-height: 94vh;
+  overflow-y: auto;
   padding: 40px;
   text-align: center;
   background: #151026;
@@ -109,6 +111,31 @@ body:after {
   min-height: 20px;
   color: var(--cyan) !important;
   font-weight: bold;
+}
+.virtual-money-notice {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 2px solid #ffd166;
+  background: #251b14;
+  color: #f4e7bc;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.virtual-money-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffd166;
+  font: 9px "Press Start 2P";
+}
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 11px;
+}
+.legal-links a {
+  color: #9cefe4;
 }
 .room-bar {
   padding: 7px 12px;
