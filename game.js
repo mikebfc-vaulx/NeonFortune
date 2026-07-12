@@ -10,6 +10,11 @@ const translations = {
   de: { intro:"Erstelle eine private Lobby oder tritt mit dem Code eines Freundes bei.", player:"SPIELERNAME", avatar:"AVATAR", create:"LOBBY ERSTELLEN", or:"ODER", code:"CODE", join:"BEITRETEN", ready:"ICH BIN BEREIT", waiting:"Das Spiel beginnt, wenn alle bereit sind.", virtualTitle:"NUR VIRTUELLE WÄHRUNG", virtualText:"Keine Einzahlungen, Auszahlungen oder Echtgeldpreise. Das Spielguthaben hat keinen Geldwert und ist nicht konvertierbar.", terms:"Bedingungen", balance:"GUTHABEN", objective:"ZIEL", time:"ZEIT", players:"SPIELER", copy:"CODE KOPIEREN", back:"ZURÜCK ZUR LOBBY", prompt:"Drücke <b>E</b> zum Spielen", controls:"WASD: bewegen · E: spielen · LEERTASTE: schlagen · 1–5: Emote", mission:"MISSION", skill:"FÄHIGKEIT", combo:"TEAM-KOMBO", soundOn:"♪ AUDIO AN", soundOff:"× AUDIO AUS" },
   es: { intro:"Crea una sala privada o entra con el código de un amigo.", player:"NOMBRE DEL JUGADOR", avatar:"AVATAR", create:"CREAR SALA", or:"O", code:"CÓDIGO", join:"ENTRAR", ready:"ESTOY LISTO", waiting:"La partida comienza cuando todos están listos.", virtualTitle:"SOLO MONEDA VIRTUAL", virtualText:"Sin depósitos, retiros ni premios en dinero real. El saldo del juego no tiene valor monetario ni es convertible.", terms:"Términos", balance:"SALDO", objective:"OBJETIVO", time:"TIEMPO", players:"JUGADORES", copy:"COPIAR CÓDIGO", back:"VOLVER A LA SALA", prompt:"Pulsa <b>E</b> para jugar", controls:"WASD: moverse · E: jugar · ESPACIO: golpear · 1–5: emoticono", mission:"MISIÓN", skill:"HABILIDAD", combo:"COMBO DE EQUIPO", soundOn:"♪ AUDIO ON", soundOff:"× AUDIO OFF" }
 };
+translations.it.intro = "Non giocare nella vita reale, gioca a Neon Casino da solo o con i tuoi amici!";
+translations.en.intro = "Don't gamble in real life—play Neon Casino alone or with your friends!";
+translations.fr.intro = "Ne jouez pas dans la vie réelle : jouez à Neon Casino seul ou avec vos amis !";
+translations.de.intro = "Spiele nicht im echten Leben – spiele Neon Casino allein oder mit deinen Freunden!";
+translations.es.intro = "¡No juegues en la vida real: juega a Neon Casino solo o con tus amigos!";
 const gameLocale = {
   it: {
     tables: { blackjack:"BLACKJACK", roulette:"ROULETTE", dice:"DADI", horses:"CORSA CAVALLI", slots:"SLOT MACHINE", plinko:"PLINKO", fortune:"RUOTA FORTUNA" },
@@ -32,6 +37,11 @@ const gameLocale = {
     blackjack:["BLACKJACK","Llega a 21 sin pasarte. El blackjack paga 3:2."], roulette:["RULETA EUROPEA","Elige una ficha, colócala en el tablero y gira."], slots:["TRAGAPERRAS","Los tres rodillos giran y se detienen uno a uno."], fortune:["RULETA DE LA FORTUNA","40 % favorable al jugador · 60 % favorable a la casa."], dice:["MESA DE DADOS","Apuesta por la suma de dos dados: bajo, siete o alto."], plinko:["PLINKO","Cada clic lanza una bola nueva. Más riesgo significa premios mayores y un centro peor."], horses:["CARRERA DE CABALLOS","Elige al ganador. La carrera dura 10 segundos en una pista recta."]
   }
 };
+gameLocale.it.slots[1] = "Video slot 5×3 con 10 linee di pagamento. La puntata viene divisa fra tutte le linee.";
+gameLocale.en.slots[1] = "5×3 video slot with 10 paylines. The total bet is split across every line.";
+gameLocale.fr.slots[1] = "Machine à sous vidéo 5×3 avec 10 lignes. La mise totale est répartie sur toutes les lignes.";
+gameLocale.de.slots[1] = "5×3-Video-Slot mit 10 Gewinnlinien. Der Gesamteinsatz wird auf alle Linien verteilt.";
+gameLocale.es.slots[1] = "Tragaperras de vídeo 5×3 con 10 líneas. La apuesta total se divide entre todas las líneas.";
 const gameWords = {
   en:{"SALDO DISPONIBILE":"AVAILABLE BALANCE","EFFETTI ATTIVI":"ACTIVE EFFECTS","LA TUA MANO":"YOUR HAND","Scegli la puntata e gioca.":"Choose your bet and play.","GIOCA":"PLAY","CARTA":"HIT","RADDOPPIA":"DOUBLE","STAI":"STAND","ROSSO":"RED","NERO":"BLACK","PARI":"EVEN","DISPARI":"ODD","Fiches piazzate: $0":"Chips placed: $0","RITIRA FICHES":"CLEAR CHIPS","GIRA":"SPIN","Tenta la fortuna!":"Try your luck!","Scegli un risultato e lancia.":"Choose an outcome and roll.","BASSO":"LOW","SETTE":"SEVEN","ALTO":"HIGH","LANCIA":"ROLL","FACILE":"EASY","MEDIO":"MEDIUM","DIFFICILE":"HARD","LANCIA PALLINA":"DROP BALL","Scegli un cavallo e avvia la corsa.":"Choose a horse and start the race.","CORRI":"RACE"},
   fr:{"SALDO DISPONIBILE":"SOLDE DISPONIBLE","EFFETTI ATTIVI":"EFFETS ACTIFS","LA TUA MANO":"VOTRE MAIN","Scegli la puntata e gioca.":"Choisissez votre mise et jouez.","GIOCA":"JOUER","CARTA":"CARTE","RADDOPPIA":"DOUBLER","STAI":"RESTER","ROSSO":"ROUGE","NERO":"NOIR","PARI":"PAIR","DISPARI":"IMPAIR","Fiches piazzate: $0":"Jetons placés : $0","RITIRA FICHES":"RETIRER LES JETONS","GIRA":"TOURNER","Tenta la fortuna!":"Tentez votre chance !","Scegli un risultato e lancia.":"Choisissez un résultat et lancez.","BASSO":"BAS","SETTE":"SEPT","ALTO":"HAUT","LANCIA":"LANCER","FACILE":"FACILE","MEDIO":"MOYEN","DIFFICILE":"DIFFICILE","LANCIA PALLINA":"LANCER UNE BALLE","Scegli un cavallo e avvia la corsa.":"Choisissez un cheval et lancez la course.","CORRI":"COURIR"},
@@ -64,7 +74,11 @@ function localizeDynamicElement(element) {
   if (!element) return;
   const current = element.textContent;
   if (currentLanguage === "it") {
-    if (element.dataset.i18nSource) element.textContent = element.dataset.i18nSource;
+    if (
+      element.dataset.i18nSource &&
+      current !== element.dataset.i18nSource
+    )
+      element.textContent = element.dataset.i18nSource;
     element.dataset.i18nRendered = element.textContent;
     return;
   }
@@ -1956,63 +1970,60 @@ function roulette() {
 function slots() {
   base(
     "SLOT MACHINE",
-    "I tre rulli girano e si fermano uno alla volta.",
-    `<div class="table"><div class="slot-reels"><div class="reel">★</div><div class="reel">7</div><div class="reel">◆</div></div><p id="result" class="result">Tenta la fortuna!</p><div class="payout">7 7 7 = 12x · ★ ★ ★ = 8x · altri tris = 5x</div></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" value="50"><button id="spin" class="action">GIRA</button></div>`,
+    "Video slot 5×3 con 10 linee di pagamento. La puntata viene divisa fra tutte le linee.",
+    `<div class="table modern-slot"><div class="slot-header"><strong>NEON LINES</strong><span>5 COLONNE · 3 RIGHE · 10 LINEE</span></div><div class="slot-machine"><div class="slot-reels">${Array.from({ length: 5 }, (_, col) => `<div class="reel-column" data-reel="${col}">${Array.from({ length: 3 }, (_, row) => `<div class="slot-cell" data-cell="${col}-${row}">?</div>`).join("")}</div>`).join("")}</div><svg id="slotPaylines" class="slot-paylines" viewBox="0 0 500 300" preserveAspectRatio="none"></svg></div><div class="payline-legend">${Array.from({ length: 10 }, (_, i) => `<span style="--line-color:hsl(${i * 36} 85% 60%)">${i + 1}</span>`).join("")}</div><p id="result" class="result">Tenta la fortuna su 10 linee!</p><div class="payout slot-paytable">7: 40×/100×/250× · ★: 25×/60×/150× · ◆: 20×/50×/120× · 🔔: 12×/30×/80× · 🍋: 8×/20×/50× · 🍒: 5×/12×/30×</div></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" step="10" value="100"><button id="spin" class="action">GIRA</button></div>`,
   );
-  const syms = ["🍒", "◆", "★", "7"],
-    btn = $("#spin");
+  const symbols = ["🍒", "🍒", "🍋", "🍋", "🔔", "◆", "★", "7"],
+    pay = { "🍒":[0,0,0,5,12,30], "🍋":[0,0,0,8,20,50], "🔔":[0,0,0,12,30,80], "◆":[0,0,0,20,50,120], "★":[0,0,0,25,60,150], "7":[0,0,0,40,100,250] },
+    lines = [[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],[0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,2]],
+    btn = $("#spin"), randomSymbol = () => symbols[Math.floor(Math.random() * symbols.length)];
+  const evaluate = (grid) => lines.map((rows, line) => {
+    const symbol = grid[rows[0]][0];
+    let count = 1;
+    while (count < 5 && grid[rows[count]][count] === symbol) count++;
+    return { line, rows, symbol, count, mult: pay[symbol][count] || 0 };
+  }).filter((win) => win.mult);
   btn.onclick = () => {
     const b = betValue();
     if (!b || btn.disabled) return;
     changeMoney(-b);
     btn.disabled = true;
     $("#result").textContent = "I rulli stanno girando...";
-    const result = [0, 0, 0].map(
-        () => syms[Math.floor(Math.random() * syms.length)],
-      ),
-      reels = [...document.querySelectorAll(".reel")];
+    let grid = Array.from({ length: 3 }, () => Array.from({ length: 5 }, randomSymbol));
     if (lucky()) {
-      const win = syms[Math.floor(Math.random() * syms.length)];
-      result.fill(win);
+      const chosenLine = lines[Math.floor(Math.random() * lines.length)], symbol = randomSymbol(), length = 3 + Math.floor(Math.random() * 3);
+      for (let col = 0; col < length; col++) grid[chosenLine[col]][col] = symbol;
     } else if (unlucky()) {
-      result[0] = syms[0];
-      result[1] = syms[1];
-      result[2] = syms[2];
+      for (let tries = 0; tries < 30 && evaluate(grid).length; tries++)
+        grid = Array.from({ length: 3 }, () => Array.from({ length: 5 }, randomSymbol));
     }
-    reels.forEach((reel, i) => {
+    const reels = [...document.querySelectorAll(".reel-column")];
+    $("#slotPaylines").innerHTML = "";
+    document.querySelectorAll(".slot-cell").forEach((cell) => cell.classList.remove("slot-win"));
+    reels.forEach((reel, col) => {
       reel.classList.add("reel-spinning");
-      const ticker = setInterval(
-        () =>
-          (reel.textContent = syms[Math.floor(Math.random() * syms.length)]),
-        70,
-      );
+      const cells = [...reel.querySelectorAll(".slot-cell")], ticker = setInterval(() => cells.forEach((cell) => cell.textContent = randomSymbol()), 65);
       setTimeout(
         () => {
           clearInterval(ticker);
-          reel.textContent = result[i];
+          cells.forEach((cell, row) => cell.textContent = grid[row][col]);
           reel.classList.remove("reel-spinning");
-          if (i === 2) {
-            const counts = Math.max(
-                ...syms.map((s) => result.filter((x) => x === s).length),
-              ),
-              mult =
-                counts === 3
-                  ? result[0] === "7"
-                    ? 12
-                    : result[0] === "★"
-                      ? 8
-                      : 5
-                  : counts === 2
-                    ? 2
-                    : 0;
-            changeMoney(mult ? b * mult : 0, mult > 1 ? "win" : "loss");
-            $("#result").textContent = mult
-              ? `Vittoria! ${mult}x — guadagni ${fmt(b * (mult - 1))}.`
+          if (col === 4) {
+            const wins = evaluate(grid), lineBet = b / lines.length,
+              totalPay = Math.floor(wins.reduce((sum, win) => sum + lineBet * win.mult, 0));
+            wins.forEach((win) => {
+              for (let c = 0; c < win.count; c++) document.querySelector(`[data-cell="${c}-${win.rows[c]}"]`).classList.add("slot-win");
+              const points = win.rows.map((row, c) => `${50 + c * 100},${50 + row * 100}`).join(" ");
+              $("#slotPaylines").insertAdjacentHTML("beforeend", `<polyline points="${points}" style="--line-color:hsl(${win.line * 36} 85% 60%)"/>`);
+            });
+            changeMoney(totalPay, totalPay > b ? "win" : totalPay ? "push" : "loss");
+            $("#result").textContent = wins.length
+              ? `${wins.length} linee vincenti · pagamento ${fmt(totalPay)}.`
               : "Nessuna combinazione.";
             btn.disabled = false;
           }
         },
-        900 + i * 650,
+        700 + col * 300,
       );
     });
   };
@@ -2029,7 +2040,7 @@ function fortune() {
   base(
     "RUOTA DELLA FORTUNA",
     "40% favorevole al giocatore · 60% favorevole al banco.",
-    `<div class="table"><div class="fortune-wheel-wrap"><div id="fortuneDisc" class="fortune-disc">${prizes.map((p, i) => `<span data-wheel-index="${i}" style="--slot-angle:${i * step}deg">${short(p)}</span>`).join("")}<div class="fortune-center">×</div></div></div><p id="result" class="result">12 spicchi banco · 8 spicchi giocatore · J = Jackpot.</p></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" value="100"><button id="fortuneSpin" class="action">GIRA</button></div>`,
+    `<div class="table"><div class="fortune-wheel-wrap"><div id="fortuneDisc" class="fortune-disc">${prizes.map((p, i) => `<span data-wheel-index="${i}" class="${p === 150 ? "jackpot-segment" : ""}" style="--slot-angle:${i * step}deg">${short(p)}</span>`).join("")}<div class="fortune-center">×</div></div></div><p id="result" class="result">12 spicchi banco · 8 spicchi giocatore · J = Jackpot.</p></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" value="100"><button id="fortuneSpin" class="action">GIRA</button></div>`,
   );
   let rotation = 0;
   $("#fortuneSpin").onclick = () => {

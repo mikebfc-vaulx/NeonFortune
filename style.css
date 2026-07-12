@@ -727,6 +727,60 @@ button,
   transform: translateY(3px);
   box-shadow: 0 0 18px #ffd166;
 }
+.modern-slot {
+  background: linear-gradient(180deg, #16102d, #090716);
+  border-color: #8f6cff;
+}
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  color: #ffd166;
+  line-height: 1.2;
+}
+.slot-header strong { font: 12px "Press Start 2P"; }
+.slot-header span { color: #9cefe4; font-size: 9px; }
+.slot-machine {
+  position: relative;
+  max-width: 560px;
+  margin: auto;
+  padding: 8px;
+  border: 5px solid #d1aa47;
+  background: #281832;
+  box-shadow: 0 0 22px #8f6cff88, inset 0 0 18px #000;
+  overflow: hidden;
+}
+.slot-machine .slot-reels {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  margin: 0;
+}
+.reel-column { display: grid; gap: 5px; transition: filter .15s, transform .15s; }
+.slot-cell {
+  display: grid;
+  place-items: center;
+  min-height: 70px;
+  border: 2px solid #705b90;
+  background: radial-gradient(circle, #fff7d4, #d9c78f);
+  color: #281832;
+  font-size: 32px;
+  box-shadow: inset 0 0 10px #6e451f55;
+}
+.reel-column.reel-spinning { filter: blur(1.5px); transform: translateY(3px); }
+.slot-cell.slot-win {
+  border-color: #fff;
+  background: #ffd166;
+  box-shadow: 0 0 16px #ffd166, inset 0 0 8px #fff;
+  animation: slotWinPulse .5s steps(2) infinite;
+}
+@keyframes slotWinPulse { 50% { transform: scale(.94); } }
+.slot-paylines { position: absolute; inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); pointer-events: none; }
+.slot-paylines polyline { fill: none; stroke: var(--line-color); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 4px #fff); opacity: .9; }
+.payline-legend { display: flex; justify-content: center; gap: 5px; margin: 9px 0 4px; line-height: 1; }
+.payline-legend span { display: grid; place-items: center; width: 21px; height: 18px; border: 2px solid var(--line-color); color: var(--line-color); background: #090715; font-size: 9px; font-weight: bold; }
+.slot-paytable { max-width: 600px; margin: 8px auto 0; font-size: 9px; line-height: 1.5; color: #cfc7e5; }
 .roulette-layout {
   display: grid;
   grid-template-columns: 190px 1fr;
@@ -1041,6 +1095,14 @@ button,
     width: 75px;
     font-size: 34px;
   }
+  .slot-cell { min-height: 46px; font-size: 23px; }
+  .slot-machine { padding: 4px; border-width: 3px; }
+  .slot-machine .slot-reels { gap: 3px; }
+  .reel-column { gap: 3px; }
+  .slot-header { display: block; text-align: center; }
+  .slot-header strong, .slot-header span { display: block; margin: 3px; }
+  .payline-legend { gap: 2px; }
+  .payline-legend span { width: 17px; height: 16px; font-size: 7px; }
   .roulette-layout {
     grid-template-columns: 1fr;
   }
@@ -1362,6 +1424,15 @@ button,
 .fortune-wheel-wrap .fortune-disc span:nth-child(even) {
   color: #ffd166;
 }
+.fortune-wheel-wrap .fortune-disc span.jackpot-segment {
+  color: #171020;
+  background: #ffd166;
+  border: 2px solid #fff3b8;
+  box-shadow:
+    0 0 8px #ffd166,
+    0 0 15px #ff9f1c;
+  text-shadow: none;
+}
 .fortune-wheel-wrap .fortune-disc span.wheel-winner {
   transform: translate(-50%, -50%) rotate(var(--slot-angle)) translateY(-124px)
     scale(1.25);
@@ -1445,4 +1516,53 @@ button,
   }
   .casino-wrap .side-hud span { font-size: 7px; }
   .casino-wrap .combo-box > div { height: 3px; }
+}
+/* Compact mobile objective bar at the top edge of the game area. */
+@media (max-width: 720px) {
+  .casino-wrap {
+    padding-top: 40px;
+    background: #100d20;
+  }
+  .casino-wrap .side-hud {
+    top: 4px;
+    left: 50%;
+    right: auto;
+    width: min(330px, calc(100% - 12px));
+    transform: translateX(-50%);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+  }
+  .casino-wrap .side-hud > div {
+    min-width: 0;
+    min-height: 34px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 3px;
+    text-align: center;
+    background: #090715d9;
+    border: 1px solid #6e5799;
+    box-shadow: 0 2px #030206;
+  }
+  .casino-wrap .side-hud small {
+    font-size: 5px;
+    white-space: nowrap;
+  }
+  .casino-wrap .side-hud strong {
+    width: 100%;
+    max-height: 16px;
+    margin: 2px 0 0;
+    overflow: hidden;
+    font-size: 6px;
+    line-height: 1.15;
+  }
+  .casino-wrap .side-hud span {
+    font-size: 6px;
+    line-height: 1;
+  }
+  .casino-wrap .combo-box > div {
+    width: 85%;
+    margin-top: 2px;
+  }
 }
