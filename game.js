@@ -68,7 +68,8 @@ const npcs = Array.from({ length: 9 }, (_, i) => makeNpc(i, true));
 let audioCtx = null,
   musicOn = true,
   musicTimer = null,
-  musicStep = 0;
+  musicStep = 0,
+  musicGeneration = 0;
 const stations = [
   {
     id: "blackjack",
@@ -269,6 +270,7 @@ function startRoom(players, economy) {
   $("#lobby-screen").classList.add("hidden");
   $("#roomBar").classList.remove("hidden");
   playing = true;
+  restartMusic();
   last = performance.now();
   toast(`Lobby ${currentRoom}: tutti pronti!`);
 }
@@ -283,6 +285,7 @@ function connectMultiplayer() {
   socket.onclose = () => {
     if (currentRoom) {
       playing = false;
+      restartMusic();
       currentRoom = null;
       remotePlayers.clear();
       lobbyRoster.clear();
@@ -542,7 +545,17 @@ function startMusic() {
   if (!audioCtx)
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   if (audioCtx.state === "suspended") audioCtx.resume();
-  if (!musicTimer) musicTick();
+  if (!musicTimer) {
+    musicGeneration++;
+    musicTick(musicGeneration);
+  }
+}
+function restartMusic() {
+  clearTimeout(musicTimer);
+  musicTimer = null;
+  musicStep = 0;
+  musicGeneration++;
+  if (musicOn && audioCtx) musicTick(musicGeneration);
 }
 function playTone(freq, dur, type = "triangle", vol = 0.035, delay = 0) {
   if (!audioCtx || !musicOn) return;
@@ -559,14 +572,17 @@ function playTone(freq, dur, type = "triangle", vol = 0.035, delay = 0) {
   o.start(t);
   o.stop(t + dur + 0.03);
 }
-function musicTick() {
+function musicTick(generation = musicGeneration) {
+  if (generation !== musicGeneration) return;
   if (!musicOn || !audioCtx) {
     musicTimer = null;
     return;
   }
   const urgency = 1 - Math.min(timeLeft, 300) / 300,
     bpm = 74 + urgency * 86 + (globalEvent?.name === "MODALITÀ CAOS" ? 55 : 0),
-    notes = [220, 261.63, 329.63, 392, 329.63, 261.63, 246.94, 293.66];
+    lobbyNotes = [174.61, 220, 261.63, 220, 196, 246.94, 293.66, 246.94],
+    gameNotes = [220, 261.63, 329.63, 392, 329.63, 261.63, 246.94, 293.66],
+    notes = playing ? gameNotes : lobbyNotes;
   playTone(notes[musicStep % notes.length], 0.22, "triangle", 0.028);
   if (musicStep % 4 === 0)
     playTone(notes[musicStep % notes.length] / 2, 0.38, "sine", 0.04);
@@ -574,7 +590,7 @@ function musicTick() {
     playTone(880, 0.045, "square", 0.012);
   if (urgency > 0.75) playTone(110, 0.06, "sawtooth", 0.018);
   musicStep++;
-  musicTimer = setTimeout(musicTick, 60000 / bpm / 2);
+  musicTimer = setTimeout(() => musicTick(generation), 60000 / bpm / 2);
 }
 function toggleSound() {
   musicOn = !musicOn;
@@ -586,6 +602,7 @@ function toggleSound() {
   else {
     clearTimeout(musicTimer);
     musicTimer = null;
+    musicGeneration++;
     if (audioCtx) audioCtx.suspend();
   }
 }
