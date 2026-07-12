@@ -2745,7 +2745,7 @@ const reusableAdUnits = new Map(
 );
 function loadEligibleAds() {
   const mobile = matchMedia("(max-width: 720px)").matches,
-    desktop = matchMedia("(min-width: 1540px)").matches,
+    desktop = matchMedia("(min-width: 1180px)").matches,
     inLobby = !$("#lobby-screen").classList.contains("hidden"),
     activeUnits = mobile ? ["mobile"] : desktop ? ["left", "right"] : [];
   const destinations = inLobby

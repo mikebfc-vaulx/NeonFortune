@@ -386,23 +386,23 @@ ins.adsbygoogle[data-ad-status="unfill-optimized"] {
 .mobile-ad-rail {
   display: none;
 }
-@media (min-width: 1540px) {
+@media (min-width: 1180px) {
   .ad-layout {
     display: grid;
-    grid-template-columns: minmax(170px, 1fr) minmax(0, 1180px) minmax(170px, 1fr);
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 960px) minmax(140px, 1fr);
     align-items: start;
   }
   .ad-rail-left { grid-column: 1; }
   #game-shell { grid-column: 2; justify-self: center; }
   .ad-rail-right { grid-column: 3; }
-  .ad-rail { display: block; }
+  .ad-rail { display: block; width: min(160px, calc(100% - 8px)); }
   .lobby-screen {
-    grid-template-columns: minmax(170px, 1fr) minmax(0, 540px) minmax(170px, 1fr);
+    grid-template-columns: minmax(140px, 1fr) minmax(0, 540px) minmax(140px, 1fr);
   }
   .lobby-card { grid-column: 2; }
   .lobby-ad {
     display: block;
-    width: 170px;
+    width: min(160px, calc(100% - 8px));
     min-height: 0;
     padding: 0;
     border: 0;
@@ -1531,7 +1531,7 @@ button,
    animazioni di vincita e non viene coinvolto dallo screen shake. */
 @media (min-width: 721px) {
   .casino-wrap {
-    padding-top: 64px;
+    padding-top: 0;
   }
   .casino-wrap .side-hud {
     position: absolute;
@@ -1767,7 +1767,7 @@ button,
 /* Compact mobile objective bar at the top edge of the game area. */
 @media (max-width: 720px) {
   .casino-wrap {
-    padding-top: 54px;
+    padding-top: 0;
     background: #100d20;
   }
   .casino-wrap .side-hud {
@@ -1821,6 +1821,51 @@ button,
     padding: 0;
     font-size: 15px;
     box-shadow: 2px 2px #07050e;
+  }
+}
+
+/* Fascia di stato separata dalla mappa: evento al centro, obiettivi a destra. */
+.game-status-strip {
+  position: relative;
+  min-height: 76px;
+  margin-top: 6px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(330px, 420px);
+  align-items: center;
+  gap: 12px;
+}
+.game-status-strip .event-banner {
+  position: static;
+  justify-self: center;
+  margin: 0;
+}
+.game-status-strip .side-hud {
+  position: static;
+  width: 100%;
+  transform: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3px;
+}
+.game-status-strip .side-hud-label {
+  grid-column: 1 / -1;
+}
+.game-status-strip + .casino-wrap {
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .game-status-strip {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+  .game-status-strip .event-banner {
+    grid-row: 2;
+    font-size: 8px;
+  }
+  .game-status-strip .side-hud {
+    grid-row: 1;
+    width: 100%;
   }
 }
 
