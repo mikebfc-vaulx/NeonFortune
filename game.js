@@ -90,6 +90,7 @@ const dynamicPhraseLocale = {
     ["Il bot ha lasciato cadere un oggetto misterioso!", "The bot dropped a mystery item!"],
     ["Un ladro ti ha rubato il 5%", "A thief stole 5% from you"], ["Un ladro ha rubato", "A thief stole"],
     ["Colpiscilo per recuperarli", "Hit him to get it back"], ["Fermalo", "Stop him"], ["Hai recuperato", "You recovered"], ["ha recuperato", "recovered"], ["dal ladro", "from the thief"],
+    ["Ladro colpito! Recupero del bottino...", "Thief hit! Recovering the loot..."],
     ["FORTUNA", "LUCK"], ["SFORTUNA", "BAD LUCK"], ["DONAZIONE LIVELLO", "LEVEL DONATION"],
     ["RAZZIA LIVELLO", "LEVEL RAID"], ["TEMPO EXTRA", "EXTRA TIME"], ["TEMPO RUBATO", "TIME STOLEN"],
     ["LENTEZZA", "SLOWDOWN"], ["Livello", "Level"], ["Nuovo obiettivo", "New target"],
@@ -111,6 +112,7 @@ const dynamicPhraseLocale = {
     ["Il bot ha lasciato cadere un oggetto misterioso!", "Le bot a laissé tomber un objet mystère !"],
     ["Un ladro ti ha rubato il 5%", "Un voleur vous a volé 5 %"], ["Un ladro ha rubato", "Un voleur a volé"],
     ["Colpiscilo per recuperarli", "Frappez-le pour les récupérer"], ["Fermalo", "Arrêtez-le"], ["Hai recuperato", "Vous avez récupéré"], ["ha recuperato", "a récupéré"], ["dal ladro", "au voleur"],
+    ["Ladro colpito! Recupero del bottino...", "Voleur touché ! Récupération du butin..."],
     ["FORTUNA", "CHANCE"], ["SFORTUNA", "MALCHANCE"], ["DONAZIONE LIVELLO", "DON DU NIVEAU"],
     ["RAZZIA LIVELLO", "RAID DU NIVEAU"], ["TEMPO EXTRA", "TEMPS SUPPLÉMENTAIRE"], ["TEMPO RUBATO", "TEMPS VOLÉ"],
     ["LENTEZZA", "RALENTISSEMENT"], ["Livello", "Niveau"], ["Nuovo obiettivo", "Nouvel objectif"],
@@ -132,6 +134,7 @@ const dynamicPhraseLocale = {
     ["Il bot ha lasciato cadere un oggetto misterioso!", "Der Bot hat einen geheimnisvollen Gegenstand fallen lassen!"],
     ["Un ladro ti ha rubato il 5%", "Ein Dieb hat dir 5 % gestohlen"], ["Un ladro ha rubato", "Ein Dieb hat gestohlen"],
     ["Colpiscilo per recuperarli", "Schlag ihn, um es zurückzuholen"], ["Fermalo", "Stoppe ihn"], ["Hai recuperato", "Du hast zurückgeholt"], ["ha recuperato", "hat zurückgeholt"], ["dal ladro", "vom Dieb"],
+    ["Ladro colpito! Recupero del bottino...", "Dieb getroffen! Beute wird zurückgeholt..."],
     ["FORTUNA", "GLÜCK"], ["SFORTUNA", "PECH"], ["DONAZIONE LIVELLO", "LEVEL-SPENDE"],
     ["RAZZIA LIVELLO", "LEVEL-RAUB"], ["TEMPO EXTRA", "EXTRAZEIT"], ["TEMPO RUBATO", "GESTOHLENE ZEIT"],
     ["LENTEZZA", "VERLANGSAMUNG"], ["Livello", "Level"], ["Nuovo obiettivo", "Neues Ziel"],
@@ -153,6 +156,7 @@ const dynamicPhraseLocale = {
     ["Il bot ha lasciato cadere un oggetto misterioso!", "¡El bot soltó un objeto misterioso!"],
     ["Un ladro ti ha rubato il 5%", "Un ladrón te robó el 5 %"], ["Un ladro ha rubato", "Un ladrón robó"],
     ["Colpiscilo per recuperarli", "Golpéalo para recuperarlo"], ["Fermalo", "Detenlo"], ["Hai recuperato", "Has recuperado"], ["ha recuperato", "recuperó"], ["dal ladro", "del ladrón"],
+    ["Ladro colpito! Recupero del bottino...", "¡Ladrón golpeado! Recuperando el botín..."],
     ["FORTUNA", "SUERTE"], ["SFORTUNA", "MALA SUERTE"], ["DONAZIONE LIVELLO", "DONACIÓN DE NIVEL"],
     ["RAZZIA LIVELLO", "SAQUEO DE NIVEL"], ["TEMPO EXTRA", "TIEMPO EXTRA"], ["TEMPO RUBATO", "TIEMPO ROBADO"],
     ["LENTEZZA", "LENTITUD"], ["Livello", "Nivel"], ["Nuovo obiettivo", "Nuevo objetivo"],
@@ -1362,11 +1366,12 @@ function punch(strength = 0) {
     );
   if (thief?.stolen && socket?.readyState === WebSocket.OPEN) {
     const thiefDistance = Math.hypot(thief.x - player.x, thief.y - player.y),
-      thiefDot = (thief.x - player.x) * faceX + (thief.y - player.y) * faceY,
-      thiefRange = 72 + strength * 24;
-    if (thiefDistance < thiefRange && thiefDot > 0) {
+      thiefRange = 95 + strength * 30;
+    if (thiefDistance < thiefRange) {
       socket.send(JSON.stringify({ type: "thiefPunch", id: thief.id, strength }));
+      thief.hitUntil = performance.now() + 420;
       impacts.push({ x: thief.x, y: thief.y, ttl: 0.45 });
+      toast("Ladro colpito! Recupero del bottino...");
     }
   }
   let bot = null;
@@ -1545,6 +1550,8 @@ function drawThief() {
   const bob = Math.sin(performance.now() / 85) * 2;
   ctx.save();
   ctx.translate(thief.x, thief.y + bob);
+  if ((thief.hitUntil || 0) > performance.now())
+    ctx.rotate(Math.sin(performance.now() / 32) * 0.28);
   if (thief.vx < 0) ctx.scale(-1, 1);
   ctx.fillStyle = "#090711";
   ctx.fillRect(-9, 20, 7, 13); ctx.fillRect(3, 20, 7, 13);

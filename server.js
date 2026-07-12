@@ -115,6 +115,21 @@ function refreshThiefSchedule(room, now = Date.now()) {
   const band = thiefProgressBand(room);
   if (band !== room.thiefBand && !room.thief) scheduleNextThief(room, now);
 }
+function executeThiefSteal(room, player, thief) {
+  if (!room || !player || !thief || thief.stolen) return false;
+  thief.stolen = true;
+  const stolen = Math.min(room.money, Math.max(1, Math.floor(room.money * 0.05)));
+  thief.stolenAmount = stolen;
+  thief.victim = player.id;
+  thief.victimName = player.name;
+  room.money = Math.max(0, room.money - stolen);
+  broadcast(room, { type: "thiefStole", id: thief.id, victim: player.id, victimName: player.name, stolen });
+  broadcast(room, {
+    type: "economy", money: room.money, round: room.round, goal: room.goal,
+    combo: room.combo, levelUps: 0, actor: player.name, delta: -stolen, outcome: null,
+  });
+  return true;
+}
 wss.on("connection", (ws) => {
   ws.isAlive = true;
   ws.on("pong", () => (ws.isAlive = true));
@@ -259,23 +274,13 @@ wss.on("connection", (ws) => {
       if (!thief || thief.stolen || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
       // Raggio ampio e tollerante alla latenza della posizione multiplayer.
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 95) return;
-      thief.stolen = true;
-      const stolen = Math.min(room.money, Math.max(1, Math.floor(room.money * 0.05)));
-      thief.stolenAmount = stolen;
-      thief.victim = player.id;
-      thief.victimName = player.name;
-      room.money = Math.max(0, room.money - stolen);
-      broadcast(room, { type: "thiefStole", id: thief.id, victim: player.id, victimName: player.name, stolen });
-      broadcast(room, {
-        type: "economy", money: room.money, round: room.round, goal: room.goal,
-        combo: room.combo, levelUps: 0, actor: player.name, delta: -stolen, outcome: null,
-      });
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 130) return;
+      executeThiefSteal(room, player, thief);
     } else if (m.type === "thiefPunch" && player.room) {
       const room = rooms.get(player.room), thief = room?.thief;
       if (!thief || !thief.stolen || thief.recovered || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 95) return;
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 130) return;
       thief.recovered = true;
       const recovered = Math.max(0, Number(thief.stolenAmount) || 0);
       room.money = Math.min(MAX_ECONOMY, room.money + recovered);
@@ -402,6 +407,13 @@ const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "d
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
+    if (room.thief && !room.thief.stolen) {
+      const thiefPos = thiefPosition(room.thief, now);
+      const victim = [...room.players.values()].find(
+        (p) => Math.hypot(p.x - thiefPos.x, p.y - thiefPos.y) <= 88,
+      );
+      if (victim) executeThiefSteal(room, victim, room.thief);
+    }
     if (room.thief && now >= room.thief.expiresAt) {
       const thiefId = room.thief.id;
       room.thief = null;
