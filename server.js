@@ -153,6 +153,15 @@ wss.on("connection", (ws) => {
         ws,
       );
       broadcast(room, { type: "count", count: room.players.size });
+    } else if (m.type === "profile" && player.room) {
+      const room = rooms.get(player.room);
+      if (!room) return;
+      player.name =
+        String(m.name || player.name || "Player")
+          .trim()
+          .slice(0, 14) || "Player";
+      player.avatar = Math.max(0, Math.min(3, +m.avatar || 0));
+      broadcast(room, { type: "roster", players: roster(room) });
     } else if (m.type === "ready" && player.room) {
       const room = rooms.get(player.room);
       player.ready = !!m.ready;

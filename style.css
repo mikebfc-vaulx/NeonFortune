@@ -7,6 +7,7 @@
   --panel: #17122b;
   --cyan: #39e6d0;
 }
+
 * {
   box-sizing: border-box;
 }
@@ -122,6 +123,21 @@ body:after {
   background: #080712;
   border: 2px solid #6e5799;
   text-transform: uppercase;
+}
+.profile-editor {
+  margin: 14px 0;
+  padding: 12px;
+  border: 2px solid #4f3a70;
+  background: #0d0919aa;
+}
+.profile-editor .avatar-picker {
+  margin-bottom: 2px;
+}
+#updateProfile {
+  margin-bottom: 9px;
+  color: #171020;
+  background: #39e6d0;
+  box-shadow: 4px 4px #196b61;
 }
 .lobby-actions {
   display: grid;
@@ -1393,20 +1409,24 @@ button,
   color: #ffd166;
 }
 .side-hud {
-  position: fixed;
-  z-index: 3;
-  right: 15px;
-  bottom: 15px;
-  width: 190px;
+  position: absolute;
+  z-index: 4;
+  top: 8px;
+  right: 8px;
+  bottom: auto;
+  width: min(360px, calc(100% - 16px));
   display: grid;
-  gap: 7px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
   line-height: 1.2;
 }
 .side-hud > div {
-  padding: 10px;
+  min-width: 0;
+  padding: 5px 7px;
+  text-align: center;
   background: #090715e8;
-  border: 2px solid #4f3a70;
-  box-shadow: 3px 3px #030206;
+  border: 1px solid #4f3a70;
+  box-shadow: 2px 2px #030206;
 }
 .side-hud small {
   display: block;
@@ -1443,7 +1463,7 @@ button,
     box-shadow: 0 0 22px #ffd166;
   }
 }
-.casino-wrap.shake {
+.casino-wrap.shake canvas {
   animation: screenShake 0.28s steps(2);
 }
 @keyframes screenShake {
@@ -1455,6 +1475,27 @@ button,
   }
   75% {
     transform: translate(3px, 2px);
+  }
+}
+
+/* HUD obiettivi stabile: resta in una riga sopra la mappa anche durante le
+   animazioni di vincita e non viene coinvolto dallo screen shake. */
+@media (min-width: 721px) {
+  .casino-wrap {
+    padding-top: 48px;
+  }
+  .casino-wrap .side-hud {
+    position: absolute;
+    z-index: 4;
+    top: 6px;
+    right: 8px;
+    bottom: auto;
+    left: auto;
+    width: min(420px, calc(100% - 16px));
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
   }
 }
 .modal:not(.hidden) .game-panel {
@@ -1731,5 +1772,20 @@ button,
     padding: 0;
     font-size: 15px;
     box-shadow: 2px 2px #07050e;
+  }
+}
+
+@media (min-width: 721px) {
+  .casino-wrap .side-hud {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    bottom: auto;
+    left: auto;
+    width: min(420px, calc(100% - 16px));
+    transform: none;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
   }
 }

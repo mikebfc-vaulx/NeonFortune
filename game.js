@@ -53,6 +53,13 @@ const mobileLabels = {
   de:["SPIELEN","SCHLAG"], es:["JUGAR","GOLPEAR"]
 };
 const mobileHints = { it:"TRASCINA SULLA MAPPA PER MUOVERTI", en:"DRAG ON THE MAP TO MOVE", fr:"GLISSEZ SUR LA CARTE POUR BOUGER", de:"ZUM BEWEGEN ÜBER DIE KARTE ZIEHEN", es:"ARRASTRA EN EL MAPA PARA MOVERTE" };
+const profileLocale = {
+  it:["AGGIORNA PROFILO","Puoi modificare nome e avatar anche dopo essere entrato. La partita parte quando tutti sono pronti."],
+  en:["UPDATE PROFILE","You can change your name and avatar after joining. The game starts when everyone is ready."],
+  fr:["METTRE À JOUR LE PROFIL","Vous pouvez modifier votre nom et votre avatar après avoir rejoint le salon. La partie commence quand tout le monde est prêt."],
+  de:["PROFIL AKTUALISIEREN","Du kannst Name und Avatar nach dem Beitritt ändern. Das Spiel beginnt, wenn alle bereit sind."],
+  es:["ACTUALIZAR PERFIL","Puedes cambiar tu nombre y avatar después de entrar. La partida comienza cuando todos están listos."]
+};
 const missionLocale = {
   it:{collect:"Raccogli 2 misteri",punch:"Colpisci 5 personaggi",win:"Ottieni 3 vincite"},
   en:{collect:"Collect 2 mysteries",punch:"Hit 5 characters",win:"Get 3 wins"},
@@ -120,6 +127,8 @@ function setLanguage(lang) {
   const mobileText = mobileLabels[lang];
   if (mobileText) { set("#touchPlay", mobileText[0]); set("#touchPunch", mobileText[1]); }
   set(".touch-move-hint", mobileHints[lang]);
+  set("#updateProfile", profileLocale[lang][0]);
+  set("#waitingRoom small", profileLocale[lang][1]);
   if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
   if (typeof lobbyRoster !== "undefined") renderLobby();
   if (typeof selectedAvatar !== "undefined") setRole();
@@ -368,7 +377,6 @@ function applyEconomy(e, announce = false) {
   $("#comboValue").textContent = `×${teamCombo}`;
   $("#comboFill").style.width = `${Math.min(100, teamCombo * 10)}%`;
   if (announce && e.delta > 0) {
-    spawnMoneyFx(e.delta);
     if (e.outcome === "win") trackMission("win");
     if (teamCombo > oldCombo && teamCombo % 5 === 0)
       toast(`COMBO DI SQUADRA ×${teamCombo}!`);
@@ -580,6 +588,14 @@ $("#leaveRoom").onclick = () => {
   $("#leaveRoom").disabled = true;
   socket.send(JSON.stringify({ type: "leave" }));
   setTimeout(() => ($("#leaveRoom").disabled = false), 800);
+};
+$("#updateProfile").onclick = () => {
+  if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
+  const name = $("#playerName").value.trim() || myName || "Player";
+  myName = name.slice(0, 14);
+  $("#playerName").value = myName;
+  socket.send(JSON.stringify({ type: "profile", name: myName, avatar: selectedAvatar }));
+  toast(currentLanguage === "it" ? "Profilo aggiornato!" : "Profile updated!");
 };
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
@@ -823,7 +839,14 @@ function toast(msg) {
   clearTimeout(toast.t);
   toast.t = setTimeout(() => t.classList.add("hidden"), 2200);
 }
-function changeMoney(n, outcome = null) {
+function changeMoney(n, outcome = null, wager = null) {
+  const referenceBet = Number.isFinite(wager)
+    ? wager
+    : Math.max(0, Number($("#bet")?.value) || 0);
+  // I coriandoli sono riservati alle vincite eccezionali: il ritorno deve
+  // superare, non semplicemente eguagliare, dieci volte la puntata.
+  const showBigWinFx = outcome === "win" && referenceBet > 0 && n > referenceBet * 10;
+  if (showBigWinFx) spawnMoneyFx(n);
   if (n > 0 && selectedAvatar === 1) n = Math.floor(n * 1.05);
   if (n > 0 && globalEvent?.name === "HAPPY HOUR") n = Math.floor(n * 1.25);
   if (currentRoom && socket?.readyState === WebSocket.OPEN) {
@@ -836,7 +859,6 @@ function changeMoney(n, outcome = null) {
   if (outcome === "win") teamCombo++;
   else if (outcome === "loss") teamCombo = 0;
   if (n > 0) {
-    spawnMoneyFx(n);
     trackMission("win");
   }
   if (money >= goal) advanceLevel();
@@ -1149,7 +1171,7 @@ function punch(strength = 0) {
       void $(".casino-wrap").offsetWidth;
       $(".casino-wrap").classList.add("shake");
     }
-    if (Math.random() < 0.1) {
+    if (Math.random() < 0.25) {
       pickup = {
         x: Math.max(35, Math.min(925, bot.x)),
         y: Math.max(85, Math.min(485, bot.y)),
@@ -1981,7 +2003,7 @@ function roulette() {
         else if (k === "pari" && n > 0 && n % 2 === 0) pay += v * 2;
         else if (k === "dispari" && n % 2 === 1) pay += v * 2;
       });
-      changeMoney(pay, pay > total ? "win" : pay < total ? "loss" : "push");
+      changeMoney(pay, pay > total ? "win" : pay < total ? "loss" : "push", total);
       bets = {};
       total = 0;
       refresh();
@@ -2003,6 +2025,8 @@ function slots() {
   );
   $(".slot-paytable").textContent =
     "7: 46×/115×/290× · ★: 29×/70×/175× · ◆: 23×/58×/138× · 🔔: 14×/35×/92× · 🍋: 9×/23×/58× · 🍒: 6×/14×/35×";
+  $(".slot-header span").textContent =
+    ({ it:"5 COLONNE · 3 RIGHE · 10 LINEE · BONUS PAYOUT +10%", en:"5 COLUMNS · 3 ROWS · 10 LINES · +10% PAYOUT BONUS", fr:"5 COLONNES · 3 RANGÉES · 10 LIGNES · BONUS +10 %", de:"5 WALZEN · 3 REIHEN · 10 LINIEN · +10 % BONUS", es:"5 COLUMNAS · 3 FILAS · 10 LÍNEAS · BONO +10 %" }[currentLanguage]);
   const symbols = ["🍒", "🍒", "🍋", "🍋", "🔔", "◆", "★", "7"],
     pay = { "🍒":[0,0,0,6,14,35], "🍋":[0,0,0,9,23,58], "🔔":[0,0,0,14,35,92], "◆":[0,0,0,23,58,138], "★":[0,0,0,29,70,175], "7":[0,0,0,46,115,290] },
     lines = [[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],[0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,2]],
@@ -2040,13 +2064,14 @@ function slots() {
           reel.classList.remove("reel-spinning");
           if (col === 4) {
             const wins = evaluate(grid), lineBet = b / lines.length,
-              totalPay = Math.floor(wins.reduce((sum, win) => sum + lineBet * win.mult, 0));
+              basePay = wins.reduce((sum, win) => sum + lineBet * win.mult, 0),
+              totalPay = Math.floor(basePay * 1.1);
             wins.forEach((win) => {
               for (let c = 0; c < win.count; c++) document.querySelector(`[data-cell="${c}-${win.rows[c]}"]`).classList.add("slot-win");
               const points = win.rows.map((row, c) => `${50 + c * 100},${50 + row * 100}`).join(" ");
               $("#slotPaylines").insertAdjacentHTML("beforeend", `<polyline points="${points}" style="--line-color:hsl(${win.line * 36} 85% 60%)"/>`);
             });
-            changeMoney(totalPay, totalPay > b ? "win" : totalPay ? "push" : "loss");
+            changeMoney(totalPay, totalPay > b ? "win" : totalPay ? "push" : "loss", b);
             $("#result").textContent = wins.length
               ? `${wins.length} linee vincenti · pagamento ${fmt(totalPay)}.`
               : "Nessuna combinazione.";
@@ -2061,8 +2086,8 @@ function slots() {
 
 function fortune() {
   const prizes = [
-      0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.2, 1.2, 1.2,
-      2, 2, 5, 15, 150,
+      0.3, 0.3, 0.3, 0.3, 0.3, 0.3, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1.3, 1.3, 1.3,
+      2.2, 2.2, 6, 18, 150,
     ].sort(() => Math.random() - 0.5),
     short = (p) => (p === 150 ? "J" : String(p)),
     full = (p) => (p === 150 ? "JACKPOT 150×" : `${p}×`),
@@ -2099,7 +2124,7 @@ function fortune() {
     $("#result").textContent = "La ruota sta girando...";
     setTimeout(() => {
       const pay = Math.max(1, Math.floor(b * prize));
-      changeMoney(pay, pay > b ? "win" : pay < b ? "loss" : "push");
+      changeMoney(pay, pay > b ? "win" : pay < b ? "loss" : "push", b);
       document
         .querySelector(`[data-wheel-index="${index}"]`)
         .classList.add("wheel-winner");
@@ -2164,7 +2189,7 @@ function dice() {
       const sum = a + d,
         win = wins(sum, pick),
         mult = pick === "seven" ? 5 : 2;
-      changeMoney(win ? b * mult : 0, win ? "win" : "loss");
+      changeMoney(win ? b * mult : 0, win ? "win" : "loss", b);
       $("#result").textContent =
         `${a} + ${d} = ${sum} — ${win ? `vinci ${fmt(b * mult)}` : "il banco vince"}.`;
       rolling = false;
@@ -2255,6 +2280,7 @@ function plinko() {
         changeMoney(
           pay,
           pay > ball.bet ? "win" : pay < ball.bet ? "loss" : "push",
+          ball.bet,
         );
         if (resultEl.isConnected)
           resultEl.textContent =
@@ -2484,7 +2510,7 @@ function poker() {
       dh = bestHand([...dealer, ...common]),
       cmp = compareScore(ph.score, dh.score);
     if (cmp > 0) {
-      changeMoney(b * 2, "win");
+      changeMoney(b * 2, "win", b);
       $("#result").textContent = `Hai vinto con ${ph.name}! Banco: ${dh.name}.`;
     } else if (cmp === 0) {
       changeMoney(b, "push");
@@ -2605,7 +2631,7 @@ function horses() {
       horses.sort((a, b) => b.pos - a.pos);
       const winner = horses[0].i;
       if (winner === pick) {
-        changeMoney(b * 4, "win");
+        changeMoney(b * 4, "win", b);
         $("#result").textContent =
           `Vince il cavallo #${winner + 1}! Guadagni ${fmt(b * 3)}.`;
       } else {
