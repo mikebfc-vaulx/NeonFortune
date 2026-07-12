@@ -2624,7 +2624,7 @@ function loadEligibleAds() {
   const mobile = matchMedia("(max-width: 720px)").matches,
     selector = mobile
       ? ".mobile-ad-rail .adsbygoogle:not([data-loaded])"
-      : matchMedia("(min-width: 1500px)").matches
+      : matchMedia("(min-width: 1540px)").matches
         ? ".ad-rail .adsbygoogle:not([data-loaded])"
         : "";
   if (!selector) return;

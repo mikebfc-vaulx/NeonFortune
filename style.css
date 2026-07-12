@@ -343,12 +343,15 @@ body:after {
 .mobile-ad-rail {
   display: none;
 }
-@media (min-width: 1500px) {
+@media (min-width: 1540px) {
   .ad-layout {
     display: grid;
     grid-template-columns: minmax(170px, 1fr) minmax(0, 1180px) minmax(170px, 1fr);
     align-items: start;
   }
+  .ad-rail-left { grid-column: 1; }
+  #game-shell { grid-column: 2; justify-self: center; }
+  .ad-rail-right { grid-column: 3; }
   .ad-rail { display: block; }
 }
 .hud {
@@ -1074,9 +1077,8 @@ button,
   .ad-rail { display: none !important; }
   .mobile-ad-rail {
     display: block;
-    min-height: 52px;
-    margin: 4px 3px;
-    padding: 4px;
+    margin: 2px 3px;
+    padding: 2px 4px;
     color: #817990;
     border: 1px solid #3d315d;
     background: #100d20aa;
@@ -1088,6 +1090,9 @@ button,
     display: block;
     margin-bottom: 2px;
     letter-spacing: 1px;
+  }
+  .mobile-ad-rail:has(ins[data-ad-status="unfilled"]) {
+    display: none;
   }
   body {
     overflow: auto;
