@@ -1499,6 +1499,10 @@ function loop(now) {
     "hidden",
     !nearby() || modalOpen || globalEvent?.name === "BLACKOUT",
   );
+  const touchPlayButton = $("#touchPlay"),
+    touchCanPlay = playing && !modalOpen && !!nearby(true);
+  touchPlayButton.disabled = !touchCanPlay;
+  touchPlayButton.classList.toggle("is-active", touchCanPlay);
   requestAnimationFrame(safeLoop);
 }
 function safeLoop(now) {
@@ -1973,8 +1977,10 @@ function slots() {
     "Video slot 5×3 con 10 linee di pagamento. La puntata viene divisa fra tutte le linee.",
     `<div class="table modern-slot"><div class="slot-header"><strong>NEON LINES</strong><span>5 COLONNE · 3 RIGHE · 10 LINEE</span></div><div class="slot-machine"><div class="slot-reels">${Array.from({ length: 5 }, (_, col) => `<div class="reel-column" data-reel="${col}">${Array.from({ length: 3 }, (_, row) => `<div class="slot-cell" data-cell="${col}-${row}">?</div>`).join("")}</div>`).join("")}</div><svg id="slotPaylines" class="slot-paylines" viewBox="0 0 500 300" preserveAspectRatio="none"></svg></div><div class="payline-legend">${Array.from({ length: 10 }, (_, i) => `<span style="--line-color:hsl(${i * 36} 85% 60%)">${i + 1}</span>`).join("")}</div><p id="result" class="result">Tenta la fortuna su 10 linee!</p><div class="payout slot-paytable">7: 40×/100×/250× · ★: 25×/60×/150× · ◆: 20×/50×/120× · 🔔: 12×/30×/80× · 🍋: 8×/20×/50× · 🍒: 5×/12×/30×</div></div><div class="actions"><input id="bet" class="bet-input" type="number" min="10" step="10" value="100"><button id="spin" class="action">GIRA</button></div>`,
   );
+  $(".slot-paytable").textContent =
+    "7: 46×/115×/290× · ★: 29×/70×/175× · ◆: 23×/58×/138× · 🔔: 14×/35×/92× · 🍋: 9×/23×/58× · 🍒: 6×/14×/35×";
   const symbols = ["🍒", "🍒", "🍋", "🍋", "🔔", "◆", "★", "7"],
-    pay = { "🍒":[0,0,0,5,12,30], "🍋":[0,0,0,8,20,50], "🔔":[0,0,0,12,30,80], "◆":[0,0,0,20,50,120], "★":[0,0,0,25,60,150], "7":[0,0,0,40,100,250] },
+    pay = { "🍒":[0,0,0,6,14,35], "🍋":[0,0,0,9,23,58], "🔔":[0,0,0,14,35,92], "◆":[0,0,0,23,58,138], "★":[0,0,0,29,70,175], "7":[0,0,0,46,115,290] },
     lines = [[0,0,0,0,0],[1,1,1,1,1],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],[0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[0,1,1,1,2]],
     btn = $("#spin"), randomSymbol = () => symbols[Math.floor(Math.random() * symbols.length)];
   const evaluate = (grid) => lines.map((rows, line) => {

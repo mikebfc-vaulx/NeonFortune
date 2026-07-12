@@ -1218,6 +1218,26 @@ button,
     border-color: #ef476f;
     background: #7f203ddd;
   }
+  #touchPlay {
+    opacity: 0.38;
+    filter: grayscale(1);
+    border-color: #716a7f;
+    box-shadow: 2px 2px #05030b;
+    transition: opacity 0.15s, filter 0.15s, box-shadow 0.15s;
+  }
+  #touchPlay.is-active:not(:disabled) {
+    opacity: 1;
+    filter: none;
+    color: #171020;
+    background: #ffd166;
+    border-color: #fff3b8;
+    box-shadow:
+      3px 3px #8a5730,
+      0 0 16px #ffd166;
+  }
+  #prompt {
+    display: none !important;
+  }
 }
 .event-banner {
   position: fixed;
