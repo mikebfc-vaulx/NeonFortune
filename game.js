@@ -127,8 +127,8 @@ function setLanguage(lang) {
   const mobileText = mobileLabels[lang];
   if (mobileText) { set("#touchPlay", mobileText[0]); set("#touchPunch", mobileText[1]); }
   set(".touch-move-hint", mobileHints[lang]);
-  set("#updateProfile", profileLocale[lang][0]);
   set("#waitingRoom small", profileLocale[lang][1]);
+  set("#copyInvite", {it:"COPIA LINK INVITO",en:"COPY INVITE LINK",fr:"COPIER LE LIEN",de:"EINLADUNG KOPIEREN",es:"COPIAR ENLACE"}[lang]);
   if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
   if (typeof lobbyRoster !== "undefined") renderLobby();
   if (typeof selectedAvatar !== "undefined") setRole();
@@ -342,14 +342,36 @@ function objectiveReward() {
 }
 function showEvent(event) {
   globalEvent = event;
-  $("#eventName").textContent = event.name;
+  $("#eventName").textContent = event.name === "TAVOLO CHIUSO"
+    ? `TAVOLO CHIUSO: ${blockedGameName(event.blockedGame)}`
+    : event.name;
   $("#eventBanner").classList.remove("hidden");
-  toast(`EVENTO: ${event.name}`);
+  toast(`EVENTO: ${$("#eventName").textContent}`);
   if (event.name === "PIOGGIA DI FICHES") spawnIn = 1;
+  updateGameLock();
 }
 function hideEvent() {
   globalEvent = null;
   $("#eventBanner").classList.add("hidden");
+  updateGameLock();
+}
+function blockedGameName(id) {
+  return gameLocale[currentLanguage]?.[id]?.[0] || stations.find((s) => s.id === id)?.name || id || "?";
+}
+function isGameBlocked(id) {
+  return globalEvent?.name === "TAVOLO CHIUSO" && globalEvent.blockedGame === id;
+}
+function updateGameLock() {
+  const old = $("#gameEventLock");
+  if (!modalOpen || !isGameBlocked(activeGameId)) {
+    old?.remove();
+    return;
+  }
+  const lock = old || document.createElement("div");
+  lock.id = "gameEventLock";
+  lock.className = "game-event-lock";
+  lock.innerHTML = `<div><strong>🚫 ${blockedGameName(activeGameId)}</strong><span>GIOCO TEMPORANEAMENTE BLOCCATO</span><small>Il tavolo riapre tra <b id="gameLockTime">25</b>s</small></div>`;
+  if (!old) $(".game-panel").appendChild(lock);
 }
 function spawnMoneyFx(amount) {
   for (
@@ -459,6 +481,7 @@ function connectMultiplayer() {
       m.players.forEach((p) => lobbyRoster.set(p.id, p));
       $("#currentRoom").textContent = m.code;
       $("#waitingCode").textContent = m.code;
+      $("#inviteLink").value = `${location.origin}${location.pathname}?room=${encodeURIComponent(m.code)}`;
       $("#onlineCount").textContent = m.players.length;
       $("#lobbyEntry").classList.add("hidden");
       $("#waitingRoom").classList.remove("hidden");
@@ -555,6 +578,8 @@ $("#joinRoom").onclick = () => lobbyAction("join");
 $("#roomCode").addEventListener("keydown", (e) => {
   if (e.key === "Enter") lobbyAction("join");
 });
+const invitedRoom = new URLSearchParams(location.search).get("room");
+if (invitedRoom) $("#roomCode").value = invitedRoom.trim().toUpperCase().slice(0, 6);
 $("#copyRoom").onclick = async () => {
   if (!currentRoom) return;
   try {
@@ -589,14 +614,18 @@ $("#leaveRoom").onclick = () => {
   socket.send(JSON.stringify({ type: "leave" }));
   setTimeout(() => ($("#leaveRoom").disabled = false), 800);
 };
-$("#updateProfile").onclick = () => {
+let profileUpdateTimer = null;
+function syncLobbyProfile() {
   if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
   const name = $("#playerName").value.trim() || myName || "Player";
   myName = name.slice(0, 14);
-  $("#playerName").value = myName;
   socket.send(JSON.stringify({ type: "profile", name: myName, avatar: selectedAvatar }));
-  toast(currentLanguage === "it" ? "Profilo aggiornato!" : "Profile updated!");
-};
+}
+function queueProfileUpdate() {
+  clearTimeout(profileUpdateTimer);
+  profileUpdateTimer = setTimeout(syncLobbyProfile, 300);
+}
+$("#playerName").addEventListener("input", queueProfileUpdate);
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
     (x.onclick = () => {
@@ -605,8 +634,18 @@ document.querySelectorAll(".avatar-choice").forEach(
       document
         .querySelectorAll(".avatar-choice")
         .forEach((y) => y.classList.toggle("selected", y === x));
+      queueProfileUpdate();
     }),
 );
+async function copyLobbyText(value, success) {
+  if (!value) return;
+  try {
+    await navigator.clipboard.writeText(value);
+    toast(success);
+  } catch { toast(value); }
+}
+$("#copyWaitingCode").onclick = () => copyLobbyText(currentRoom, "Codice lobby copiato!");
+$("#copyInvite").onclick = () => copyLobbyText($("#inviteLink").value, "Link invito copiato!");
 $("#readyButton").onclick = () => {
   if (!currentRoom) return;
   isReady = !isReady;
@@ -1411,6 +1450,8 @@ function loop(now) {
       Math.ceil((globalEvent.endsAt - Date.now()) / 1000),
     );
     $("#eventTime").textContent = `${left}s`;
+    const lockTime = $("#gameLockTime");
+    if (lockTime) lockTime.textContent = left;
     if (globalEvent.name === "PIOGGIA DI FICHES" && !pickup)
       spawnIn = Math.min(spawnIn, 5);
   }
@@ -1509,6 +1550,15 @@ function loop(now) {
     if (pickup && Math.hypot(player.x - pickup.x, player.y - pickup.y) < 30)
       collectLuck();
     timeLeft -= dt;
+    const pressureWrap = $(".casino-wrap");
+    if (timeLeft > 0 && timeLeft <= 60) {
+      const urgency = 1 - timeLeft / 60;
+      pressureWrap.classList.add("deadline-shake");
+      pressureWrap.style.setProperty("--deadline-speed", `${Math.max(0.08, 0.7 - urgency * 0.62)}s`);
+      pressureWrap.style.setProperty("--deadline-amp", `${(0.4 + urgency * 4.6).toFixed(2)}px`);
+    } else {
+      pressureWrap.classList.remove("deadline-shake");
+    }
     if (timeLeft <= 0) checkGoal();
     sync();
   }
@@ -1702,6 +1752,10 @@ function closeGame() {
 }
 function openGame(id) {
   if (!playing) return;
+  if (isGameBlocked(id)) {
+    toast(`${blockedGameName(id)} è temporaneamente chiuso!`);
+    return;
+  }
   modalBackdropLockedUntil = performance.now() + 650;
   activeGameId = id;
   modalOpen = true;
@@ -1733,6 +1787,7 @@ function base(title, sub, body) {
   $("#game-content").innerHTML =
     `<div class="mini-balance"><span>SALDO DISPONIBILE</span><strong id="miniBalance">${fmt(money)}</strong></div><div id="miniEffect" class="mini-effect ${activeEffect ? "" : "hidden"}"><span>EFFETTI ATTIVI</span><strong>${activeEffect}</strong></div><h2 class="game-title">${localized?.[0] || title}</h2><p class="subtitle">${localized?.[1] || sub}</p>${body}`;
   translateGameMarkup();
+  updateGameLock();
 }
 function effectSummary() {
   const effects = [];

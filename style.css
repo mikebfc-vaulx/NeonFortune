@@ -133,12 +133,10 @@ body:after {
 .profile-editor .avatar-picker {
   margin-bottom: 2px;
 }
-#updateProfile {
-  margin-bottom: 9px;
-  color: #171020;
-  background: #39e6d0;
-  box-shadow: 4px 4px #196b61;
-}
+.copy-code { padding: 7px 9px; color: #ffd166; background: #080712; border: 1px solid #6e5799; cursor: pointer; }
+.invite-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; margin: 10px 0; }
+.invite-row input { min-width: 0; margin: 0; padding: 9px; font-size: 9px; text-transform: none; }
+.invite-row button { padding: 9px; color: #171020; background: #39e6d0; border: 0; box-shadow: 3px 3px #196b61; }
 .lobby-actions {
   display: grid;
   gap: 12px;
@@ -631,6 +629,34 @@ canvas {
   top: 14px;
   z-index: 2;
 }
+
+.game-event-lock {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: repeating-linear-gradient(135deg, #080712f2 0 18px, #301326f2 18px 36px);
+  pointer-events: all;
+}
+.game-event-lock > div {
+  width: min(520px, 92%);
+  padding: 28px 18px;
+  text-align: center;
+  line-height: 1.6;
+  color: #fff;
+  background: #100b1e;
+  border: 4px solid #ef476f;
+  box-shadow: 8px 8px #05030b, 0 0 35px #ef476f88;
+}
+.game-event-lock strong,
+.game-event-lock span,
+.game-event-lock small { display: block; margin: 8px 0; }
+.game-event-lock strong { color: #ffd166; font-size: 18px; }
+.game-event-lock span { color: #ef476f; font-size: 12px; }
+.game-event-lock small { font-size: 10px; }
+.game-panel > .close { z-index: 21; }
 .game-title {
   font: 18px "Press Start 2P";
   color: var(--gold);
@@ -1476,6 +1502,14 @@ button,
   75% {
     transform: translate(3px, 2px);
   }
+}
+.casino-wrap.deadline-shake canvas {
+  animation: deadlineShake var(--deadline-speed, 0.7s) steps(2, end) infinite;
+}
+@keyframes deadlineShake {
+  25% { transform: translate(var(--deadline-amp), calc(0px - var(--deadline-amp))); }
+  50% { transform: translate(calc(0px - var(--deadline-amp)), var(--deadline-amp)); }
+  75% { transform: translate(var(--deadline-amp), var(--deadline-amp)); }
 }
 
 /* HUD obiettivi stabile: resta in una riga sopra la mappa anche durante le

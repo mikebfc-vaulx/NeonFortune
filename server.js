@@ -284,9 +284,11 @@ server.listen(PORT, () => console.log(`Neon Fortune listening on ${PORT}`));
 const eventTypes = [
   "BLACKOUT",
   "HAPPY HOUR",
+  "TAVOLO CHIUSO",
   "PIOGGIA DI FICHES",
   "MODALITÀ CAOS",
 ];
+const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "dice", "plinko"];
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
@@ -295,9 +297,13 @@ setInterval(() => {
       room.nextEvent = now + 50000 + Math.random() * 35000;
       broadcast(room, { type: "eventEnd" });
     } else if (!room.event && now >= room.nextEvent) {
+      const name = eventTypes[Math.floor(Math.random() * eventTypes.length)];
       room.event = {
-        name: eventTypes[Math.floor(Math.random() * eventTypes.length)],
+        name,
         endsAt: now + 25000,
+        ...(name === "TAVOLO CHIUSO"
+          ? { blockedGame: closableGames[Math.floor(Math.random() * closableGames.length)] }
+          : {}),
       };
       broadcast(room, { type: "eventStart", event: room.event });
     }
