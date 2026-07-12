@@ -81,15 +81,16 @@ function spawnThief(room) {
   if (!room || room.thief) return;
   const fromLeft = Math.random() < 0.5,
     diagonal = Math.random() < 0.45,
-    speed = 125 + Math.random() * 55;
+    speed = 70 + Math.random() * 30;
+  const travelTime = 1050 / speed + 2;
   room.thief = {
     id: Math.random().toString(36).slice(2, 10),
     x: fromLeft ? -45 : 1005,
     y: 105 + Math.random() * 330,
     vx: (fromLeft ? 1 : -1) * speed,
-    vy: diagonal ? (Math.random() < 0.5 ? -1 : 1) * (22 + Math.random() * 28) : 0,
+    vy: diagonal ? (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 8) : 0,
     spawnedAt: Date.now(),
-    expiresAt: Date.now() + 9000,
+    expiresAt: Date.now() + travelTime * 1000,
     stolen: false,
   };
   broadcast(room, { type: "thiefSpawn", thief: room.thief });
@@ -101,10 +102,10 @@ function thiefProgressBand(room) {
 function scheduleNextThief(room, now = Date.now()) {
   const band = thiefProgressBand(room),
     ranges = [
-      [70000, 110000], // lontani: molto raro
-      [50000, 80000],
-      [30000, 50000],
-      [12000, 25000],  // vicini all'obiettivo: pressione alta
+      [60000, 95000], // lontani: ancora rari
+      [42000, 68000],
+      [25000, 42000],
+      [10000, 21000], // vicini all'obiettivo: pressione alta
     ],
     [min, max] = ranges[band];
   room.thiefBand = band;
@@ -175,7 +176,7 @@ wss.on("connection", (ws) => {
           pickup: null,
           nextPickup: Date.now() + 12000 + Math.random() * 18000,
           thief: null,
-          nextThief: Date.now() + 30000 + Math.random() * 20000,
+          nextThief: Date.now() + 25000 + Math.random() * 17000,
           thiefBand: 2,
         };
         rooms.set(roomCode, room);
@@ -257,7 +258,8 @@ wss.on("connection", (ws) => {
       const room = rooms.get(player.room), thief = room?.thief;
       if (!thief || thief.stolen || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 42) return;
+      // Raggio ampio e tollerante alla latenza della posizione multiplayer.
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 95) return;
       thief.stolen = true;
       const stolen = Math.min(room.money, Math.max(1, Math.floor(room.money * 0.05)));
       thief.stolenAmount = stolen;

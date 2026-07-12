@@ -287,6 +287,7 @@ let playerKnock = null,
   localEmote = null,
   pendingOutcomes = 0,
   bankruptcyTimer = null;
+let theftAlert = null;
 const missions = [
   { name: "Raccogli 2 misteri", type: "collect", goal: 2 },
   { name: "Colpisci 5 personaggi", type: "punch", goal: 5 },
@@ -638,6 +639,12 @@ function connectMultiplayer() {
     } else if (m.type === "thiefSpawn") receiveThief(m.thief);
     else if (m.type === "thiefStole") {
       if (thief?.id === m.id) { thief.stolen = true; thief.stolenAmount = m.stolen; }
+      if (m.victim === myId) {
+        theftAlert = { text: `−5%  ${fmt(m.stolen)}`, until: performance.now() + 1900 };
+        $(".casino-wrap").classList.remove("shake");
+        void $(".casino-wrap").offsetWidth;
+        $(".casino-wrap").classList.add("shake");
+      }
       toast(m.victim === myId
         ? `Un ladro ti ha rubato il 5%: -${fmt(m.stolen)}! Colpiscilo per recuperarli!`
         : `Un ladro ha rubato ${fmt(m.stolen)} a ${m.victimName}! Fermalo!`);
@@ -1516,7 +1523,7 @@ function receiveSharedPickup(item) {
 }
 function receiveThief(data) {
   if (!data) return;
-  thief = { ...data, contacted: false, x: data.x, y: data.y };
+  thief = { ...data, lastContactSent: 0, x: data.x, y: data.y };
 }
 function updateThief() {
   if (!thief) return;
@@ -1526,8 +1533,9 @@ function updateThief() {
   thief.x = thief.originX + thief.vx * elapsed;
   thief.y = thief.originY + thief.vy * elapsed;
   if (Date.now() >= thief.expiresAt) { thief = null; return; }
-  if (!thief.contacted && Math.hypot(player.x - thief.x, player.y - thief.y) < 34) {
-    thief.contacted = true;
+  const now = performance.now();
+  if (!thief.stolen && Math.hypot(player.x - thief.x, player.y - thief.y) < 68 && now - thief.lastContactSent > 320) {
+    thief.lastContactSent = now;
     if (currentRoom && socket?.readyState === WebSocket.OPEN)
       socket.send(JSON.stringify({ type: "thiefHit", id: thief.id }));
   }
@@ -1557,6 +1565,23 @@ function drawThief() {
   ctx.fillStyle = "#ef476f";
   ctx.font = "bold 9px monospace";
   ctx.fillText("LADRO", 0, -19);
+  ctx.restore();
+}
+function drawTheftAlert() {
+  if (!theftAlert || theftAlert.until <= performance.now()) {
+    theftAlert = null;
+    return;
+  }
+  const pulse = 1 + Math.sin(performance.now() / 70) * 0.08;
+  ctx.save();
+  ctx.translate(player.x, player.y - 58);
+  ctx.scale(pulse, pulse);
+  ctx.textAlign = "center";
+  ctx.font = "bold 18px monospace";
+  ctx.shadowColor = "#ef476f";
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = "#ef476f";
+  ctx.fillText(theftAlert.text, 0, 0);
   ctx.restore();
 }
 function drawPressure() {
@@ -1836,6 +1861,7 @@ function loop(now) {
     // Keep the local player and name readable inside the small light radius.
     drawPlayer();
   } else drawPressure();
+  drawTheftAlert();
   $("#prompt").classList.toggle(
     "hidden",
     !nearby() || modalOpen || globalEvent?.name === "BLACKOUT",
