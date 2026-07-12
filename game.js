@@ -1799,9 +1799,6 @@ function fortune() {
       nextFullTurn = Math.floor(rotation / 360) + 6;
     rotation = nextFullTurn * 360 - index * step;
     disc.style.transform = `rotate(${rotation}deg)`;
-    document.querySelectorAll("[data-wheel-index]").forEach((label) => {
-      label.style.setProperty("--counter-rotation", `${-rotation}deg`);
-    });
     $("#result").textContent = "La ruota sta girando...";
     setTimeout(() => {
       const pay = Math.max(1, Math.floor(b * prize));

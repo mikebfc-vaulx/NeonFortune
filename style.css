@@ -1126,7 +1126,7 @@ button,
   height: 16px;
   display: grid;
   place-items: center;
-  transform: rotate(var(--counter-rotation, 0deg)) !important;
+  transform: rotate(var(--label-angle)) !important;
   transform-origin: center;
   font: bold 9px "Space Mono";
   color: #fff;
@@ -1134,13 +1134,12 @@ button,
   border-radius: 5px;
   text-shadow: 1px 1px #111;
   white-space: nowrap;
-  transition: transform 4.2s cubic-bezier(0.08, 0.68, 0.12, 1);
 }
 .fortune-wheel-wrap .fortune-disc span:nth-child(even) {
   color: #ffd166;
 }
 .fortune-wheel-wrap .fortune-disc span.wheel-winner {
-  transform: rotate(var(--counter-rotation, 0deg)) scale(1.25) !important;
+  transform: rotate(var(--label-angle)) scale(1.25) !important;
   background: #fff;
   color: #151020;
   outline: 2px solid #ffd166;
