@@ -26,10 +26,11 @@
       <p>Non giocare nella vita reale, gioca a Neon Casino da solo o con i tuoi amici!</p>
       <div class="profile-editor">
         <label>NOME GIOCATORE<input id="playerName" maxlength="14" placeholder="High Roller"></label>
+        <label>NOME SQUADRA<input id="teamName" maxlength="18" placeholder="Neon Team"></label>
         <div class="avatar-picker"><span>AVATAR</span><button class="avatar-choice selected" data-avatar="0">🎩</button><button class="avatar-choice" data-avatar="1">👑</button><button class="avatar-choice" data-avatar="2">🤠</button><button class="avatar-choice" data-avatar="3">🤡</button></div>
       </div>
       <div id="lobbyEntry" class="lobby-actions"><button id="createRoom">CREA LOBBY</button><span>OPPURE</span><div class="join-row"><input id="roomCode" maxlength="6" placeholder="CODICE"><button id="joinRoom">ENTRA</button></div></div>
-      <div id="waitingRoom" class="waiting-room hidden"><h2>LOBBY <button id="copyWaitingCode" class="copy-code" title="Copia codice"><strong id="waitingCode">******</strong> 📋</button><button id="toggleWaitingCode" class="code-eye" title="Mostra codice" aria-label="Mostra codice">👁</button></h2><div id="lobbyPlayers"></div><div class="invite-row"><input id="inviteLink" readonly aria-label="Link invito"><button id="copyInvite">COPIA LINK INVITO</button></div><button id="readyButton">SONO PRONTO</button><button id="cancelLobby" class="menu-return">TORNA AL MENU</button><small>Nome e avatar si aggiornano automaticamente. La partita parte quando tutti sono pronti.</small></div>
+      <div id="waitingRoom" class="waiting-room hidden"><h2>LOBBY <button id="copyWaitingCode" class="copy-code" title="Copia codice"><strong id="waitingCode">******</strong> 📋</button><button id="toggleWaitingCode" class="code-eye" title="Mostra codice" aria-label="Mostra codice">👁</button></h2><strong id="teamLobbyName" class="team-lobby-name">NEON TEAM</strong><div id="lobbyPlayers"></div><div class="invite-row"><input id="inviteLink" readonly aria-label="Link invito"><button id="copyInvite">COPIA LINK INVITO</button></div><button id="readyButton">SONO PRONTO</button><button id="cancelLobby" class="menu-return">TORNA AL MENU</button><small>Nome e avatar si aggiornano automaticamente. La partita parte quando tutti sono pronti.</small></div>
       <button id="lobbySound" class="lobby-sound">♪ AUDIO ON</button>
       <aside class="virtual-money-notice">
         <strong>SOLO VALUTA VIRTUALE</strong>
@@ -41,6 +42,7 @@
         <a href="terms.html" target="_blank" rel="noopener">Termini</a>
       </nav>
       <p id="lobbyStatus" class="lobby-status">Connessione al casinò...</p>
+      <section class="leaderboard-panel"><h2>LEADERBOARD</h2><div class="leaderboard-tabs"><button data-board="week" class="selected">SETTIMANA</button><button data-board="month">MESE</button><button data-board="all">ALL-TIME</button></div><div id="leaderboardList"></div></section>
     </section>
     <aside class="lobby-ad lobby-ad-right" aria-label="Pubblicità">
       <span>Pubblicità</span>
@@ -74,6 +76,7 @@
       <div class="side-hud" aria-label="Obiettivi"><div class="side-hud-label">OBIETTIVI</div><div class="combo-box"><small>COMBO SQUADRA</small><strong id="comboValue">×0</strong><div><i id="comboFill"></i></div></div><div class="mission-box"><small>MISSIONE</small><strong id="missionName">Raccogli 2 misteri</strong><span id="missionProgress">0 / 2</span></div><div class="role-box"><small>ABILITÀ</small><strong id="roleName">FORTUNATO</strong></div></div>
     </div>
     <section class="casino-wrap">
+      <aside id="sessionLeaderboard" class="session-leaderboard"><strong>SESSIONE</strong><div id="sessionBoardList"></div></aside>
       <canvas id="casino" width="960" height="540" aria-label="Sala del casinò"></canvas>
       <div id="chargeMeter" class="charge-meter hidden"><span>CARICA PUGNO</span><div><i id="chargeFill"></i></div></div>
       <div id="prompt" class="prompt hidden">Premi <b>E</b> per giocare</div>

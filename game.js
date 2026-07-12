@@ -211,6 +211,8 @@ function setLanguage(lang) {
   document.querySelectorAll("#languagePicker button").forEach((b) => b.classList.toggle("selected", b.dataset.lang === lang));
   set(".lobby-card > p:not(.lobby-status)", t.intro);
   const nameLabel = $("#playerName")?.parentElement?.childNodes[0]; if (nameLabel) nameLabel.nodeValue = t.player;
+  const teamLabel = $("#teamName")?.parentElement?.childNodes[0];
+  if (teamLabel) teamLabel.nodeValue = ({it:"NOME SQUADRA",en:"TEAM NAME",fr:"NOM DE L'ÉQUIPE",de:"TEAMNAME",es:"NOMBRE DEL EQUIPO"}[lang]);
   set(".avatar-picker > span", t.avatar); set("#createRoom", t.create); set("#lobbyEntry > span", t.or);
   $("#roomCode").placeholder = t.code; set("#joinRoom", t.join);
   set("#readyButton", isReady
@@ -231,6 +233,12 @@ function setLanguage(lang) {
   set("#copyInvite", {it:"COPIA LINK INVITO",en:"COPY INVITE LINK",fr:"COPIER LE LIEN",de:"EINLADUNG KOPIEREN",es:"COPIAR ENLACE"}[lang]);
   set("#cancelLobby", {it:"TORNA AL MENU",en:"BACK TO MENU",fr:"RETOUR AU MENU",de:"ZURÜCK ZUM MENÜ",es:"VOLVER AL MENÚ"}[lang]);
   set("#endToLobby", {it:"TORNA ALLA LOBBY",en:"BACK TO LOBBY",fr:"RETOUR AU SALON",de:"ZURÜCK ZUR LOBBY",es:"VOLVER A LA SALA"}[lang]);
+  const boardWords = {it:["SETTIMANA","MESE","ALL-TIME","SESSIONE"],en:["WEEK","MONTH","ALL-TIME","SESSION"],fr:["SEMAINE","MOIS","TOUJOURS","SESSION"],de:["WOCHE","MONAT","ALLZEIT","SITZUNG"],es:["SEMANA","MES","HISTÓRICO","SESIÓN"]}[lang];
+  document.querySelector('[data-board="week"]').textContent = boardWords[0];
+  document.querySelector('[data-board="month"]').textContent = boardWords[1];
+  document.querySelector('[data-board="all"]').textContent = boardWords[2];
+  set(".session-leaderboard > strong", boardWords[3]);
+  if (typeof renderLeaderboard === "function") renderLeaderboard();
   if (typeof mission !== "undefined") set("#missionName", missionLocale[lang][mission.type]);
   if (typeof lobbyRoster !== "undefined") renderLobby();
   if (typeof selectedAvatar !== "undefined") setRole();
@@ -294,6 +302,17 @@ let playerKnock = null,
   pendingOutcomes = 0,
   bankruptcyTimer = null;
 let theftAlert = null;
+const droppedSacks = [];
+let leaderboardBoards = { week:[], month:[], all:[] }, activeBoard = "week";
+const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function renderLeaderboard() {
+  const list = $("#leaderboardList"), rows = leaderboardBoards[activeBoard] || [];
+  const empty = {it:"Nessun record",en:"No records",fr:"Aucun record",de:"Keine Rekorde",es:"Sin récords"}[currentLanguage];
+  list.innerHTML = rows.length ? rows.map((r,i) => `<div class="leaderboard-row"><b>#${i+1}</b><span>${escapeHtml(r.team)}</span><em>LV.${r.level} · ${fmt(r.maxMoney)}</em></div>`).join("") : `<div class="leaderboard-row"><span>—</span><span>${empty}</span><em>—</em></div>`;
+}
+function renderSessionBoard(rows = []) {
+  $("#sessionBoardList").innerHTML = rows.map((p) => `<div class="session-player"><span>${escapeHtml(p.name)}</span><b class="${p.net >= 0 ? "positive" : "negative"}">${p.net >= 0 ? "+" : ""}${fmt(p.net)}</b></div>`).join("");
+}
 const missions = [
   { name: "Raccogli 2 misteri", type: "collect", goal: 2 },
   { name: "Colpisci 5 personaggi", type: "punch", goal: 5 },
@@ -527,6 +546,7 @@ function applyEconomy(e, announce = false) {
   round = e.round;
   goal = e.goal;
   teamCombo = e.combo || 0;
+  if (e.session) renderSessionBoard(e.session);
   $("#comboValue").textContent = `×${teamCombo}`;
   $("#comboFill").style.width = `${Math.min(100, teamCombo * 10)}%`;
   if (announce && e.delta > 0) {
@@ -601,6 +621,7 @@ function connectMultiplayer() {
   socket.onmessage = (e) => {
     const m = JSON.parse(e.data);
     if (m.type === "connected") myId = m.id;
+    else if (m.type === "leaderboard") { leaderboardBoards = m.boards || leaderboardBoards; renderLeaderboard(); }
     else if (m.type === "error") status.textContent = m.message;
     else if (m.type === "left") returnToLobby();
     else if (m.type === "joined") {
@@ -621,6 +642,9 @@ function connectMultiplayer() {
       if (m.event) showEvent(m.event);
       if (m.pickup) receiveSharedPickup(m.pickup);
       if (m.thief) receiveThief(m.thief);
+      if (m.leaderboard) { leaderboardBoards = m.leaderboard; renderLeaderboard(); }
+      if (m.session) renderSessionBoard(m.session);
+      $("#teamLobbyName").textContent = m.teamName || "Neon Team";
     } else if (m.type === "playerJoined") {
       lobbyRoster.set(m.player.id, m.player);
       renderLobby();
@@ -655,6 +679,8 @@ function connectMultiplayer() {
         ? `Un ladro ti ha rubato il 5%: -${fmt(m.stolen)}! Colpiscilo per recuperarli!`
         : `Un ladro ha rubato ${fmt(m.stolen)} a ${m.victimName}! Fermalo!`);
     } else if (m.type === "thiefRecovered") {
+      if (thief)
+        droppedSacks.push({ x:thief.x, y:thief.y - 4, vx:(Math.random() - 0.5) * 65, vy:-125, ttl:1.8, amount:m.recovered });
       if (!thief || thief.id === m.id) thief = null;
       toast(m.hero === myId
         ? `Hai recuperato ${fmt(m.recovered)} dal ladro!`
@@ -732,7 +758,8 @@ function lobbyAction(type) {
   if (type === "join" && !code)
     return ($("#lobbyStatus").textContent = "Inserisci il codice della lobby");
   myName = name;
-  socket.send(JSON.stringify({ type, name, code, avatar: selectedAvatar }));
+  const teamName = $("#teamName").value.trim() || "Neon Team";
+  socket.send(JSON.stringify({ type, name, code, avatar: selectedAvatar, teamName }));
   $("#lobbyStatus").textContent =
     type === "create" ? "Creazione lobby..." : "Accesso alla lobby...";
 }
@@ -768,6 +795,7 @@ $("#toggleWaitingCode").onclick = toggleRoomCode;
 function returnToLobby() {
   playing = false;
   thief = null;
+  droppedSacks.length = 0;
   closeGame();
   currentRoom = null;
   isReady = false;
@@ -1596,6 +1624,37 @@ function drawTheftAlert() {
   ctx.fillText(theftAlert.text, 0, 0);
   ctx.restore();
 }
+function updateAndDrawSacks(dt) {
+  for (let i = droppedSacks.length - 1; i >= 0; i--) {
+    const sack = droppedSacks[i];
+    sack.x += sack.vx * dt;
+    sack.y += sack.vy * dt;
+    sack.vy += 260 * dt;
+    if (sack.y > 485) { sack.y = 485; sack.vy *= -0.22; sack.vx *= 0.75; }
+    sack.ttl -= dt;
+    if (sack.ttl <= 0) { droppedSacks.splice(i, 1); continue; }
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, sack.ttl * 1.8);
+    ctx.translate(sack.x, sack.y);
+    ctx.rotate(sack.vx * 0.012 + sack.vy * 0.003);
+    ctx.fillStyle = "#b48b38";
+    ctx.fillRect(-11, -13, 22, 25);
+    ctx.fillStyle = "#6e451f";
+    ctx.fillRect(-7, -17, 14, 6);
+    ctx.fillStyle = "#ffd166";
+    ctx.font = "bold 13px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("$", 0, 5);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, sack.ttl);
+    ctx.fillStyle = "#39e6d0";
+    ctx.font = "bold 11px monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(`+${fmt(sack.amount)}`, sack.x, sack.y - 24);
+    ctx.restore();
+  }
+}
 function drawPressure() {
   if (timeLeft > 60 || !playing) return;
   const p = 1 - timeLeft / 60,
@@ -1850,6 +1909,7 @@ function loop(now) {
     .sort((a, b) => a.y - b.y)
     .forEach(drawNpc);
   drawThief();
+  updateAndDrawSacks(dt);
   remotePlayers.forEach(drawRemotePlayer);
   drawLuck();
   drawPlayer();
@@ -2994,6 +3054,14 @@ $("#endToLobby").onclick = () => {
 document.querySelectorAll("#languagePicker button").forEach(
   (button) => (button.onclick = () => setLanguage(button.dataset.lang)),
 );
+document.querySelectorAll(".leaderboard-tabs button").forEach((button) => {
+  button.onclick = () => {
+    activeBoard = button.dataset.board;
+    document.querySelectorAll(".leaderboard-tabs button").forEach((b) => b.classList.toggle("selected", b === button));
+    renderLeaderboard();
+  };
+});
+renderLeaderboard();
 const reusableAdUnits = new Map(
   [...document.querySelectorAll("[data-ad-unit]")].map((ad) => [ad.dataset.adUnit, ad]),
 );

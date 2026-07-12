@@ -5,6 +5,9 @@ const { WebSocketServer, WebSocket } = require("ws");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
+const LEADERBOARD_FILE = path.join(ROOT, "leaderboard.json");
+let leaderboard = [];
+try { leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, "utf8")); } catch { leaderboard = []; }
 const MAX_ECONOMY = 1e300;
 const rooms = new Map();
 const types = {
@@ -51,6 +54,25 @@ const broadcast = (room, data, except) => {
     if (p.ws !== except) send(p.ws, payload);
   });
 };
+const sessionBoard = (room) => [...room.players.values()]
+  .map((p) => ({ id:p.id, name:p.name, net:Math.trunc(p.sessionNet || 0) }))
+  .sort((a,b) => b.net - a.net);
+function leaderboardPayload() {
+  const now = Date.now(), periods = { week:7 * 864e5, month:30 * 864e5, all:Infinity };
+  const rank = (items) => items.slice().sort((a,b) => b.level - a.level || b.maxMoney - a.maxMoney).slice(0,10);
+  return Object.fromEntries(Object.entries(periods).map(([key, age]) => [key, rank(leaderboard.filter((x) => now - x.at <= age))]));
+}
+function saveLeaderboard() {
+  try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard.slice(-500), null, 2)); } catch {}
+}
+function recordRoom(room) {
+  if (!room?.started || room.recorded) return;
+  room.recorded = true;
+  leaderboard.push({ team:room.teamName || "Neon Team", level:room.maxRound || room.round, maxMoney:room.maxMoney || room.money, at:Date.now() });
+  saveLeaderboard();
+  const data = { type:"leaderboard", boards:leaderboardPayload() };
+  wss.clients.forEach((client) => send(client, data));
+}
 const roster = (room) =>
   [...room.players.values()].map((p) => ({
     id: p.id,
@@ -123,10 +145,11 @@ function executeThiefSteal(room, player, thief) {
   thief.victim = player.id;
   thief.victimName = player.name;
   room.money = Math.max(0, room.money - stolen);
+  player.sessionNet = (player.sessionNet || 0) - stolen;
   broadcast(room, { type: "thiefStole", id: thief.id, victim: player.id, victimName: player.name, stolen });
   broadcast(room, {
     type: "economy", money: room.money, round: room.round, goal: room.goal,
-    combo: room.combo, levelUps: 0, actor: player.name, delta: -stolen, outcome: null,
+    combo: room.combo, levelUps: 0, actor: player.name, delta: -stolen, outcome: null, session:sessionBoard(room),
   });
   return true;
 }
@@ -142,6 +165,7 @@ wss.on("connection", (ws) => {
     color: Math.floor(Math.random() * 360),
     avatar: 0,
     ready: false,
+    sessionNet: 0,
     lastMoveAt: 0,
     ws,
     room: null,
@@ -156,9 +180,10 @@ wss.on("connection", (ws) => {
     room.players.delete(player.id);
     broadcast(room, { type: "playerLeft", id: player.id });
     broadcast(room, { type: "count", count: room.players.size });
-    if (!room.players.size) rooms.delete(code);
+    if (!room.players.size) { recordRoom(room); rooms.delete(code); }
   };
   send(ws, { type: "connected", id: player.id });
+  send(ws, { type: "leaderboard", boards: leaderboardPayload() });
   ws.on("message", (raw) => {
     if (raw.length > 4096) return;
     let m;
@@ -187,6 +212,9 @@ wss.on("connection", (ws) => {
           combo: 0,
           event: null,
           nextEvent: Date.now() + 35000,
+          teamName: String(m.teamName || "Neon Team").trim().slice(0,18) || "Neon Team",
+          maxMoney: 1000,
+          maxRound: 1,
           started: false,
           pickup: null,
           nextPickup: Date.now() + 12000 + Math.random() * 18000,
@@ -204,6 +232,7 @@ wss.on("connection", (ws) => {
           .slice(0, 14) || "Player";
       player.avatar = Math.max(0, Math.min(3, +m.avatar || 0));
       player.ready = false;
+      player.sessionNet = 0;
       player.room = roomCode;
       room.players.set(player.id, player);
       send(ws, {
@@ -220,6 +249,9 @@ wss.on("connection", (ws) => {
         event: room.event,
         pickup: room.pickup,
         thief: room.thief,
+        teamName: room.teamName,
+        leaderboard: leaderboardPayload(),
+        session: sessionBoard(room),
       });
       broadcast(
         room,
@@ -253,6 +285,7 @@ wss.on("connection", (ws) => {
             round: room.round,
             goal: room.goal,
             combo: room.combo,
+            session: sessionBoard(room),
           },
         });
       }
@@ -284,12 +317,13 @@ wss.on("connection", (ws) => {
       thief.recovered = true;
       const recovered = Math.max(0, Number(thief.stolenAmount) || 0);
       room.money = Math.min(MAX_ECONOMY, room.money + recovered);
+      player.sessionNet = (player.sessionNet || 0) + recovered;
       room.thief = null;
       scheduleNextThief(room);
       broadcast(room, { type: "thiefRecovered", id: thief.id, hero: player.id, heroName: player.name, recovered });
       broadcast(room, {
         type: "economy", money: room.money, round: room.round, goal: room.goal,
-        combo: room.combo, levelUps: 0, actor: player.name, delta: recovered, outcome: null,
+        combo: room.combo, levelUps: 0, actor: player.name, delta: recovered, outcome: null, session:sessionBoard(room),
       });
     } else if (m.type === "money" && player.room) {
       const room = rooms.get(player.room),
@@ -301,6 +335,7 @@ wss.on("connection", (ws) => {
           : 0,
         oldRound = room.round;
       room.money = Math.min(MAX_ECONOMY, Math.max(0, room.money + delta));
+      player.sessionNet = (player.sessionNet || 0) + delta;
       if (m.outcome === "win") room.combo++;
       else if (m.outcome === "loss") room.combo = 0;
       while (room.money >= room.goal) {
@@ -312,6 +347,8 @@ wss.on("connection", (ws) => {
         room.round++;
         if (room.goal >= MAX_ECONOMY) break;
       }
+      room.maxMoney = Math.max(room.maxMoney || 0, room.money);
+      room.maxRound = Math.max(room.maxRound || 1, room.round);
       refreshThiefSchedule(room);
       broadcast(room, {
         type: "economy",
@@ -323,6 +360,7 @@ wss.on("connection", (ws) => {
         actor: player.name,
         delta,
         outcome: m.outcome || null,
+        session: sessionBoard(room),
       });
     } else if (m.type === "emote" && player.room) {
       const room = rooms.get(player.room),
