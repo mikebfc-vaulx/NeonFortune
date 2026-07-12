@@ -1402,31 +1402,47 @@ button,
 }
 /* Mobile HUD override: must remain after the desktop side HUD rules. */
 @media (max-width: 720px) {
-  .hud .side-hud {
-    position: static;
-    z-index: auto;
+  .hud {
+    position: relative;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 31px;
+  }
+  .hud .brand {
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    width: auto;
+    font-size: 8px;
+  }
+  .hud .brand img {
+    width: 23px;
+    height: 23px;
+  }
+  .casino-wrap .side-hud {
+    position: absolute;
+    z-index: 4;
+    left: 5px;
     right: auto;
+    top: 5px;
     bottom: auto;
-    grid-column: 1;
-    grid-row: 2;
     width: 84px;
     display: grid;
     gap: 2px;
     line-height: 1.05;
   }
-  .hud .side-hud > div {
+  .casino-wrap .side-hud > div {
     padding: 3px 4px;
     border-width: 1px;
     box-shadow: 1px 1px #030206;
     overflow: hidden;
   }
-  .hud .side-hud small { font-size: 5px; }
-  .hud .side-hud strong {
+  .casino-wrap .side-hud small { font-size: 5px; }
+  .casino-wrap .side-hud strong {
     margin: 2px 0;
     font-size: 7px;
     line-height: 1.1;
     overflow-wrap: anywhere;
   }
-  .hud .side-hud span { font-size: 7px; }
-  .hud .combo-box > div { height: 3px; }
+  .casino-wrap .side-hud span { font-size: 7px; }
+  .casino-wrap .combo-box > div { height: 3px; }
 }

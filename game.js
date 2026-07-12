@@ -1256,12 +1256,12 @@ function collectLuck() {
     type = effects[Math.floor(Math.random() * effects.length)];
   let msg = "";
   if (type === "luck") {
-    luckBoost = 0.3 + Math.random() * 0.2;
+    luckBoost = 0.12 + Math.random() * 0.1;
     luckTime = 30 + Math.random() * 30;
     effectName = "FORTUNA";
     msg = `FORTUNA +${Math.round(luckBoost * 100)}% per ${Math.round(luckTime)}s`;
   } else if (type === "curse") {
-    luckBoost = -(0.25 + Math.random() * 0.2);
+    luckBoost = -(0.1 + Math.random() * 0.1);
     luckTime = 25 + Math.random() * 25;
     effectName = "SFORTUNA";
     msg = `SFORTUNA ${Math.round(luckBoost * 100)}% per ${Math.round(luckTime)}s`;
@@ -1567,9 +1567,14 @@ document.querySelectorAll("[data-move]").forEach((button) => {
 });
 $("#touchPlay").addEventListener("pointerdown", (e) => {
   e.preventDefault();
+  e.stopPropagation();
   const station = nearby(true);
   if (station && !modalOpen) openGame(station.id);
   else if (!station) toast(currentLanguage === "it" ? "Avvicinati a un tavolo" : "Move closer to a table");
+});
+$("#touchPlay").addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 });
 $("#touchPunch").addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -1624,7 +1629,8 @@ canvas.addEventListener("click", (e) => {
 });
 $("#close").onclick = closeGame;
 $("#modal").addEventListener("click", (e) => {
-  if (e.target.id === "modal") closeGame();
+  if (e.target.id === "modal" && performance.now() >= modalBackdropLockedUntil)
+    closeGame();
 });
 function closeGame() {
   modalOpen = false;
@@ -1632,11 +1638,13 @@ function closeGame() {
 }
 function openGame(id) {
   if (!playing) return;
+  modalBackdropLockedUntil = performance.now() + 650;
   activeGameId = id;
   modalOpen = true;
   $("#modal").classList.remove("hidden");
   ({ blackjack, roulette, horses, slots, fortune, dice, plinko })[id]();
 }
+let modalBackdropLockedUntil = 0;
 let activeGameId = null;
 function translateGameMarkup() {
   const words = gameWords[currentLanguage] || {}, root = $("#game-content");
