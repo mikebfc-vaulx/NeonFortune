@@ -152,6 +152,8 @@ body:after {
   font-weight: bold;
   cursor: pointer;
 }
+.room-bar .code-eye,
+.code-eye { margin-left: 4px; padding: 5px 7px; color: white; background: #382b59; box-shadow: 2px 2px #080712; }
 #leaveRoom {
   color: white;
   background: #be3150;
@@ -1419,11 +1421,14 @@ button,
   }
 }
 .event-banner {
-  position: fixed;
+  position: relative;
   z-index: 12;
-  left: 50%;
-  top: 105px;
-  transform: translateX(-50%);
+  left: auto;
+  top: auto;
+  transform: none;
+  width: fit-content;
+  max-width: calc(100% - 12px);
+  margin: 6px auto;
   padding: 12px 25px;
   background: #ef476f;
   border: 3px solid #ffd166;
@@ -1453,6 +1458,16 @@ button,
   background: #090715e8;
   border: 1px solid #4f3a70;
   box-shadow: 2px 2px #030206;
+}
+.side-hud .side-hud-label {
+  grid-column: 1 / -1;
+  padding: 3px 7px;
+  color: #ffd166;
+  background: #21153c;
+  border-color: #7b5aa8;
+  font-size: 8px;
+  letter-spacing: 1px;
+  line-height: 1.2;
 }
 .side-hud small {
   display: block;
@@ -1516,7 +1531,7 @@ button,
    animazioni di vincita e non viene coinvolto dallo screen shake. */
 @media (min-width: 721px) {
   .casino-wrap {
-    padding-top: 48px;
+    padding-top: 64px;
   }
   .casino-wrap .side-hud {
     position: absolute;
@@ -1752,7 +1767,7 @@ button,
 /* Compact mobile objective bar at the top edge of the game area. */
 @media (max-width: 720px) {
   .casino-wrap {
-    padding-top: 40px;
+    padding-top: 54px;
     background: #100d20;
   }
   .casino-wrap .side-hud {

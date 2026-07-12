@@ -122,6 +122,7 @@ function setLanguage(lang) {
   set(".stat:not(.target):not(.timer) small", t.balance); const target = $(".stat.target small")?.childNodes[0]; if (target) target.nodeValue = `${t.objective} #`;
   set(".stat.timer small", t.time); set("#copyRoom", t.copy); set("#leaveRoom", t.back); set(".controls", t.controls);
   $("#prompt").innerHTML = t.prompt; set(".mission-box small", t.mission); set(".role-box small", t.skill); set(".combo-box small", t.combo);
+  set(".side-hud-label", t.objective);
   const roomText = [...$("#roomBar").childNodes].find((n) => n.nodeType === 3 && /GIOCATORI|PLAYERS|JOUEURS|SPIELER|JUGADORES/.test(n.nodeValue)); if (roomText) roomText.nodeValue = ` ${t.players} `;
   $("#lobbySound").textContent = musicOn ? t.soundOn : t.soundOff;
   const mobileText = mobileLabels[lang];
@@ -172,6 +173,7 @@ let socket = null,
   lastSentY = 440,
   selectedAvatar = 0,
   isReady = false,
+  roomCodeVisible = false,
   myName = "Player",
   faceX = 1,
   faceY = 0,
@@ -441,7 +443,7 @@ function startRoom(players, economy) {
   playing = true;
   restartMusic();
   last = performance.now();
-  toast(`Lobby ${currentRoom}: tutti pronti!`);
+  toast("Lobby avviata: tutti pronti!");
 }
 function connectMultiplayer() {
   const status = $("#lobbyStatus");
@@ -479,8 +481,8 @@ function connectMultiplayer() {
       applyEconomy(m.economy);
       lobbyRoster.clear();
       m.players.forEach((p) => lobbyRoster.set(p.id, p));
-      $("#currentRoom").textContent = m.code;
-      $("#waitingCode").textContent = m.code;
+      roomCodeVisible = false;
+      renderRoomCode();
       $("#inviteLink").value = `${location.origin}${location.pathname}?room=${encodeURIComponent(m.code)}`;
       $("#onlineCount").textContent = m.players.length;
       $("#lobbyEntry").classList.add("hidden");
@@ -589,6 +591,19 @@ $("#copyRoom").onclick = async () => {
     toast(`Codice lobby: ${currentRoom}`);
   }
 };
+function renderRoomCode() {
+  const shown = roomCodeVisible && currentRoom ? currentRoom : "******";
+  $("#currentRoom").textContent = shown;
+  $("#waitingCode").textContent = shown;
+  $("#toggleRoomCode").textContent = roomCodeVisible ? "🙈" : "👁";
+  $("#toggleWaitingCode").textContent = roomCodeVisible ? "🙈" : "👁";
+}
+function toggleRoomCode() {
+  roomCodeVisible = !roomCodeVisible;
+  renderRoomCode();
+}
+$("#toggleRoomCode").onclick = toggleRoomCode;
+$("#toggleWaitingCode").onclick = toggleRoomCode;
 function returnToLobby() {
   playing = false;
   closeGame();
