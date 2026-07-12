@@ -219,18 +219,22 @@ wss.on("connection", (ws) => {
           pickup: null,
           nextPickup: Date.now() + 12000 + Math.random() * 18000,
           thief: null,
+          lootBag: null,
           nextThief: Date.now() + 25000 + Math.random() * 17000,
           thiefBand: 2,
         };
         rooms.set(roomCode, room);
       }
-      if (room.players.size >= 12)
-        return send(ws, { type: "error", message: "Lobby piena" });
+      if (room.players.size >= 4)
+        return send(ws, { type: "error", message: "Lobby piena: massimo 4 classi uniche" });
+      const requestedAvatar = Math.max(0, Math.min(3, +m.avatar || 0));
+      if ([...room.players.values()].some((p) => p.avatar === requestedAvatar))
+        return send(ws, { type: "error", message: "Classe già scelta da un altro giocatore" });
       player.name =
         String(m.name || "Player")
           .trim()
           .slice(0, 14) || "Player";
-      player.avatar = Math.max(0, Math.min(3, +m.avatar || 0));
+      player.avatar = requestedAvatar;
       player.ready = false;
       player.sessionNet = 0;
       player.room = roomCode;
@@ -249,6 +253,7 @@ wss.on("connection", (ws) => {
         event: room.event,
         pickup: room.pickup,
         thief: room.thief,
+        lootBag: room.lootBag,
         teamName: room.teamName,
         leaderboard: leaderboardPayload(),
         session: sessionBoard(room),
@@ -265,11 +270,14 @@ wss.on("connection", (ws) => {
     } else if (m.type === "profile" && player.room) {
       const room = rooms.get(player.room);
       if (!room) return;
+      const requestedAvatar = Math.max(0, Math.min(3, +m.avatar || 0));
+      if ([...room.players.values()].some((p) => p.id !== player.id && p.avatar === requestedAvatar))
+        return send(ws, { type:"classError", avatar:player.avatar, message:"Classe già scelta da un altro giocatore" });
       player.name =
         String(m.name || player.name || "Player")
           .trim()
           .slice(0, 14) || "Player";
-      player.avatar = Math.max(0, Math.min(3, +m.avatar || 0));
+      player.avatar = requestedAvatar;
       broadcast(room, { type: "roster", players: roster(room) });
     } else if (m.type === "ready" && player.room) {
       const room = rooms.get(player.room);
@@ -316,14 +324,25 @@ wss.on("connection", (ws) => {
       if (Math.hypot(player.x - pos.x, player.y - pos.y) > 130) return;
       thief.recovered = true;
       const recovered = Math.max(0, Number(thief.stolenAmount) || 0);
-      room.money = Math.min(MAX_ECONOMY, room.money + recovered);
-      player.sessionNet = (player.sessionNet || 0) + recovered;
       room.thief = null;
       scheduleNextThief(room);
-      broadcast(room, { type: "thiefRecovered", id: thief.id, hero: player.id, heroName: player.name, recovered });
+      room.lootBag = {
+        id: Math.random().toString(36).slice(2, 10), amount: recovered,
+        x: pos.x, y: pos.y, availableAt: Date.now() + 500, expiresAt: Date.now() + 15500,
+      };
+      broadcast(room, { type:"thiefDefeated", id:thief.id, hero:player.id, heroName:player.name, bag:room.lootBag, x:pos.x, y:pos.y });
+    } else if (m.type === "lootCollect" && player.room) {
+      const room = rooms.get(player.room), bag = room?.lootBag;
+      if (!bag || bag.id !== String(m.id || "") || Date.now() < bag.availableAt) return;
+      if (Math.hypot(player.x - bag.x, player.y - bag.y) > 52) return;
+      const recovered = Math.max(0, Number(bag.amount) || 0);
+      room.lootBag = null;
+      room.money = Math.min(MAX_ECONOMY, room.money + recovered);
+      player.sessionNet = (player.sessionNet || 0) + recovered;
+      broadcast(room, { type:"lootCollected", id:bag.id, collector:player.id, collectorName:player.name, recovered });
       broadcast(room, {
-        type: "economy", money: room.money, round: room.round, goal: room.goal,
-        combo: room.combo, levelUps: 0, actor: player.name, delta: recovered, outcome: null, session:sessionBoard(room),
+        type:"economy", money:room.money, round:room.round, goal:room.goal,
+        combo:room.combo, levelUps:0, actor:player.name, delta:recovered, outcome:null, session:sessionBoard(room),
       });
     } else if (m.type === "money" && player.room) {
       const room = rooms.get(player.room),
@@ -445,6 +464,11 @@ const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "d
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
+    if (room.lootBag && now >= room.lootBag.expiresAt) {
+      const bagId = room.lootBag.id;
+      room.lootBag = null;
+      broadcast(room, { type:"lootExpired", id:bagId });
+    }
     if (room.thief && !room.thief.stolen) {
       const thiefPos = thiefPosition(room.thief, now);
       const victim = [...room.players.values()].find(

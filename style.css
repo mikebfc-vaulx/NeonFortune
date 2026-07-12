@@ -261,6 +261,13 @@ body:after {
   transform: translateY(-4px);
   box-shadow: 0 4px #ef476f;
 }
+.avatar-choice.class-taken,
+.avatar-choice:disabled {
+  opacity: 0.28;
+  filter: grayscale(1);
+  cursor: not-allowed;
+  box-shadow: none;
+}
 .waiting-room h2 {
   font-size: 14px;
 }

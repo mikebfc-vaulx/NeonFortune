@@ -91,6 +91,8 @@ const dynamicPhraseLocale = {
     ["Un ladro ti ha rubato il 5%", "A thief stole 5% from you"], ["Un ladro ha rubato", "A thief stole"],
     ["Colpiscilo per recuperarli", "Hit him to get it back"], ["Fermalo", "Stop him"], ["Hai recuperato", "You recovered"], ["ha recuperato", "recovered"], ["dal ladro", "from the thief"],
     ["Ladro colpito! Recupero del bottino...", "Thief hit! Recovering the loot..."],
+    ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Thief KO! Collect the bag to recover the loot!"], ["Hai raccolto il sacco", "You collected the bag"], ["ha raccolto il sacco", "collected the bag"],
+    ["Classe già scelta da un altro giocatore", "Class already chosen by another player"],
     ["FORTUNA", "LUCK"], ["SFORTUNA", "BAD LUCK"], ["DONAZIONE LIVELLO", "LEVEL DONATION"],
     ["RAZZIA LIVELLO", "LEVEL RAID"], ["TEMPO EXTRA", "EXTRA TIME"], ["TEMPO RUBATO", "TIME STOLEN"],
     ["LENTEZZA", "SLOWDOWN"], ["Livello", "Level"], ["Nuovo obiettivo", "New target"],
@@ -113,6 +115,8 @@ const dynamicPhraseLocale = {
     ["Un ladro ti ha rubato il 5%", "Un voleur vous a volé 5 %"], ["Un ladro ha rubato", "Un voleur a volé"],
     ["Colpiscilo per recuperarli", "Frappez-le pour les récupérer"], ["Fermalo", "Arrêtez-le"], ["Hai recuperato", "Vous avez récupéré"], ["ha recuperato", "a récupéré"], ["dal ladro", "au voleur"],
     ["Ladro colpito! Recupero del bottino...", "Voleur touché ! Récupération du butin..."],
+    ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Voleur KO ! Ramassez le sac pour récupérer le butin !"], ["Hai raccolto il sacco", "Vous avez ramassé le sac"], ["ha raccolto il sacco", "a ramassé le sac"],
+    ["Classe già scelta da un altro giocatore", "Classe déjà choisie par un autre joueur"],
     ["FORTUNA", "CHANCE"], ["SFORTUNA", "MALCHANCE"], ["DONAZIONE LIVELLO", "DON DU NIVEAU"],
     ["RAZZIA LIVELLO", "RAID DU NIVEAU"], ["TEMPO EXTRA", "TEMPS SUPPLÉMENTAIRE"], ["TEMPO RUBATO", "TEMPS VOLÉ"],
     ["LENTEZZA", "RALENTISSEMENT"], ["Livello", "Niveau"], ["Nuovo obiettivo", "Nouvel objectif"],
@@ -135,6 +139,8 @@ const dynamicPhraseLocale = {
     ["Un ladro ti ha rubato il 5%", "Ein Dieb hat dir 5 % gestohlen"], ["Un ladro ha rubato", "Ein Dieb hat gestohlen"],
     ["Colpiscilo per recuperarli", "Schlag ihn, um es zurückzuholen"], ["Fermalo", "Stoppe ihn"], ["Hai recuperato", "Du hast zurückgeholt"], ["ha recuperato", "hat zurückgeholt"], ["dal ladro", "vom Dieb"],
     ["Ladro colpito! Recupero del bottino...", "Dieb getroffen! Beute wird zurückgeholt..."],
+    ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Dieb KO! Sammle den Sack ein, um die Beute zurückzuholen!"], ["Hai raccolto il sacco", "Du hast den Sack eingesammelt"], ["ha raccolto il sacco", "hat den Sack eingesammelt"],
+    ["Classe già scelta da un altro giocatore", "Klasse bereits von einem anderen Spieler gewählt"],
     ["FORTUNA", "GLÜCK"], ["SFORTUNA", "PECH"], ["DONAZIONE LIVELLO", "LEVEL-SPENDE"],
     ["RAZZIA LIVELLO", "LEVEL-RAUB"], ["TEMPO EXTRA", "EXTRAZEIT"], ["TEMPO RUBATO", "GESTOHLENE ZEIT"],
     ["LENTEZZA", "VERLANGSAMUNG"], ["Livello", "Level"], ["Nuovo obiettivo", "Neues Ziel"],
@@ -157,6 +163,8 @@ const dynamicPhraseLocale = {
     ["Un ladro ti ha rubato il 5%", "Un ladrón te robó el 5 %"], ["Un ladro ha rubato", "Un ladrón robó"],
     ["Colpiscilo per recuperarli", "Golpéalo para recuperarlo"], ["Fermalo", "Detenlo"], ["Hai recuperato", "Has recuperado"], ["ha recuperato", "recuperó"], ["dal ladro", "del ladrón"],
     ["Ladro colpito! Recupero del bottino...", "¡Ladrón golpeado! Recuperando el botín..."],
+    ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "¡Ladrón KO! ¡Recoge el saco para recuperar el botín!"], ["Hai raccolto il sacco", "Has recogido el saco"], ["ha raccolto il sacco", "recogió el saco"],
+    ["Classe già scelta da un altro giocatore", "Clase ya elegida por otro jugador"],
     ["FORTUNA", "SUERTE"], ["SFORTUNA", "MALA SUERTE"], ["DONAZIONE LIVELLO", "DONACIÓN DE NIVEL"],
     ["RAZZIA LIVELLO", "SAQUEO DE NIVEL"], ["TEMPO EXTRA", "TIEMPO EXTRA"], ["TEMPO RUBATO", "TIEMPO ROBADO"],
     ["LENTEZZA", "LENTITUD"], ["Livello", "Nivel"], ["Nuovo obiettivo", "Nuevo objetivo"],
@@ -303,6 +311,7 @@ let playerKnock = null,
   bankruptcyTimer = null;
 let theftAlert = null;
 const droppedSacks = [];
+let lootBag = null;
 let leaderboardBoards = { week:[], month:[], all:[] }, activeBoard = "week";
 const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function renderLeaderboard() {
@@ -426,6 +435,16 @@ function renderLobby() {
         `<div class="lobby-player"><span>${avatarIcons[p.avatar] || "🎩"}</span><b>${p.name}${p.id === myId ? lobbyWords[0] : ""}</b><span class="${p.ready ? "ready" : "not-ready"}">${p.ready ? lobbyWords[1] : lobbyWords[2]}</span></div>`,
     )
     .join("");
+  updateClassAvailability();
+}
+function updateClassAvailability() {
+  const occupied = new Set([...lobbyRoster.values()].filter((p) => p.id !== myId).map((p) => p.avatar));
+  document.querySelectorAll(".avatar-choice").forEach((button) => {
+    const taken = !!currentRoom && occupied.has(+button.dataset.avatar);
+    button.disabled = taken;
+    button.classList.toggle("class-taken", taken);
+    button.title = taken ? "Classe già scelta" : "";
+  });
 }
 function setRole() {
   const roles = {
@@ -622,6 +641,12 @@ function connectMultiplayer() {
     const m = JSON.parse(e.data);
     if (m.type === "connected") myId = m.id;
     else if (m.type === "leaderboard") { leaderboardBoards = m.boards || leaderboardBoards; renderLeaderboard(); }
+    else if (m.type === "classError") {
+      selectedAvatar = +m.avatar || 0;
+      document.querySelectorAll(".avatar-choice").forEach((b) => b.classList.toggle("selected", +b.dataset.avatar === selectedAvatar));
+      setRole();
+      toast(m.message || "Classe già scelta da un altro giocatore");
+    }
     else if (m.type === "error") status.textContent = m.message;
     else if (m.type === "left") returnToLobby();
     else if (m.type === "joined") {
@@ -642,6 +667,7 @@ function connectMultiplayer() {
       if (m.event) showEvent(m.event);
       if (m.pickup) receiveSharedPickup(m.pickup);
       if (m.thief) receiveThief(m.thief);
+      if (m.lootBag) receiveLootBag(m.lootBag);
       if (m.leaderboard) { leaderboardBoards = m.leaderboard; renderLeaderboard(); }
       if (m.session) renderSessionBoard(m.session);
       $("#teamLobbyName").textContent = m.teamName || "Neon Team";
@@ -678,13 +704,21 @@ function connectMultiplayer() {
       toast(m.victim === myId
         ? `Un ladro ti ha rubato il 5%: -${fmt(m.stolen)}! Colpiscilo per recuperarli!`
         : `Un ladro ha rubato ${fmt(m.stolen)} a ${m.victimName}! Fermalo!`);
-    } else if (m.type === "thiefRecovered") {
-      if (thief)
-        droppedSacks.push({ x:thief.x, y:thief.y - 4, vx:(Math.random() - 0.5) * 65, vy:-125, ttl:1.8, amount:m.recovered });
-      if (!thief || thief.id === m.id) thief = null;
-      toast(m.hero === myId
-        ? `Hai recuperato ${fmt(m.recovered)} dal ladro!`
-        : `${m.heroName} ha recuperato ${fmt(m.recovered)} dal ladro!`);
+    } else if (m.type === "thiefDefeated") {
+      const defeatedId = m.id;
+      if (thief?.id === defeatedId) { thief.hitUntil = performance.now() + 480; thief.defeated = true; }
+      setTimeout(() => {
+        if (thief?.id === defeatedId) thief = null;
+        receiveLootBag(m.bag);
+      }, 460);
+      toast("Ladro KO! Raccogli il sacco per recuperare il bottino!");
+    } else if (m.type === "lootCollected") {
+      if (!lootBag || lootBag.id === m.id) lootBag = null;
+      toast(m.collector === myId
+        ? `Hai raccolto il sacco: +${fmt(m.recovered)}!`
+        : `${m.collectorName} ha raccolto il sacco: +${fmt(m.recovered)}!`);
+    } else if (m.type === "lootExpired") {
+      if (!lootBag || lootBag.id === m.id) lootBag = null;
     }
     else if (m.type === "thiefGone") {
       if (!thief || thief.id === m.id) thief = null;
@@ -795,12 +829,14 @@ $("#toggleWaitingCode").onclick = toggleRoomCode;
 function returnToLobby() {
   playing = false;
   thief = null;
+  lootBag = null;
   droppedSacks.length = 0;
   closeGame();
   currentRoom = null;
   isReady = false;
   remotePlayers.clear();
   lobbyRoster.clear();
+  updateClassAvailability();
   hideEvent();
   $("#end-screen").classList.add("hidden");
   $("#roomBar").classList.add("hidden");
@@ -836,6 +872,7 @@ $("#playerName").addEventListener("input", queueProfileUpdate);
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
     (x.onclick = () => {
+      if (x.disabled) return;
       selectedAvatar = +x.dataset.avatar;
       setRole();
       document
@@ -1402,7 +1439,6 @@ function punch(strength = 0) {
       thiefRange = 95 + strength * 30;
     if (thiefDistance < thiefRange) {
       socket.send(JSON.stringify({ type: "thiefPunch", id: thief.id, strength }));
-      thief.hitUntil = performance.now() + 420;
       impacts.push({ x: thief.x, y: thief.y, ttl: 0.45 });
       toast("Ladro colpito! Recupero del bottino...");
     }
@@ -1563,6 +1599,31 @@ function receiveThief(data) {
   if (!data) return;
   thief = { ...data, lastContactSent: 0, x: data.x, y: data.y };
 }
+function receiveLootBag(data) {
+  if (!data) return;
+  lootBag = { ...data, y:data.y - 28, landY:data.y, vy:0, lastCollectSent:0 };
+}
+function updateAndDrawLootBag(dt) {
+  if (!lootBag) return;
+  lootBag.vy += 260 * dt;
+  lootBag.y = Math.min(lootBag.landY, lootBag.y + lootBag.vy * dt);
+  if (lootBag.y >= lootBag.landY) lootBag.vy = 0;
+  if (Date.now() >= lootBag.expiresAt) { lootBag = null; return; }
+  const now = performance.now();
+  if (Date.now() >= lootBag.availableAt && Math.hypot(player.x - lootBag.x, player.y - lootBag.landY) < 38 && now - lootBag.lastCollectSent > 350) {
+    lootBag.lastCollectSent = now;
+    if (socket?.readyState === WebSocket.OPEN)
+      socket.send(JSON.stringify({ type:"lootCollect", id:lootBag.id }));
+  }
+  ctx.save();
+  ctx.translate(lootBag.x, lootBag.y);
+  ctx.fillStyle = "#b48b38"; ctx.fillRect(-13,-14,26,28);
+  ctx.fillStyle = "#6e451f"; ctx.fillRect(-8,-19,16,7);
+  ctx.fillStyle = "#ffd166"; ctx.font = "bold 15px monospace"; ctx.textAlign = "center"; ctx.fillText("$",0,7);
+  ctx.restore();
+  ctx.fillStyle = "#39e6d0"; ctx.font = "bold 10px monospace"; ctx.textAlign = "center";
+  ctx.fillText(`RACCOGLI ${fmt(lootBag.amount)}`, lootBag.x, lootBag.y - 25);
+}
 function updateThief() {
   if (!thief) return;
   const elapsed = Math.max(0, (Date.now() - thief.spawnedAt) / 1000);
@@ -1583,8 +1644,8 @@ function drawThief() {
   const bob = Math.sin(performance.now() / 85) * 2;
   ctx.save();
   ctx.translate(thief.x, thief.y + bob);
-  if ((thief.hitUntil || 0) > performance.now())
-    ctx.rotate(Math.sin(performance.now() / 32) * 0.28);
+  if (thief.defeated && (thief.hitUntil || 0) > performance.now())
+    ctx.rotate(Math.sin(performance.now() / 28) * 0.35);
   if (thief.vx < 0) ctx.scale(-1, 1);
   ctx.fillStyle = "#090711";
   ctx.fillRect(-9, 20, 7, 13); ctx.fillRect(3, 20, 7, 13);
@@ -1731,12 +1792,16 @@ function collectLuck(forcedType = null, serverAward = false) {
   toast(`? ${msg}!`);
 }
 function lucky() {
-  return (
-    luckTime > 0 &&
-    luckBoost > 0 &&
-    Math.random() <
-      Math.min(0.95, luckBoost + (selectedAvatar === 0 ? 0.05 : 0))
-  );
+  if (luckTime <= 0 || luckBoost <= 0) return false;
+  const levelScale = Math.max(0.25, Math.pow(0.95, round - 1)),
+    chance = Math.min(0.95, (luckBoost + (selectedAvatar === 0 ? 0.05 : 0)) * levelScale),
+    triggered = Math.random() < chance;
+  if (triggered) {
+    // Una singola Fortuna non può alimentare decine di risultati forzati.
+    luckTime = Math.max(0, luckTime - 4);
+    luckBoost *= 0.9;
+  }
+  return triggered;
 }
 function unlucky() {
   return luckTime > 0 && luckBoost < 0 && Math.random() < -luckBoost;
@@ -1909,6 +1974,7 @@ function loop(now) {
     .sort((a, b) => a.y - b.y)
     .forEach(drawNpc);
   drawThief();
+  updateAndDrawLootBag(dt);
   updateAndDrawSacks(dt);
   remotePlayers.forEach(drawRemotePlayer);
   drawLuck();
@@ -2613,7 +2679,11 @@ function plinko() {
       name: "DIFFICILE",
       mults: [30, 9, 0.9, 0.4, 0.2, 0.4, 0.9, 9, 30],
     },
-  };
+  },
+    adjustedMult = (raw) => {
+      const retention = raw > 2 ? Math.max(0.85, 1 - (round - 1) * 0.015) : 1;
+      return Math.round(raw * retention * 100) / 100;
+    };
   base(
     "PLINKO",
     "Ogni clic lancia una nuova pallina. Più rischio significa premi maggiori e centro peggiore.",
@@ -2630,7 +2700,7 @@ function plinko() {
     lastLaunch = 0;
   const draw = () => {
     if (!c.isConnected) return;
-    const mults = levels[risk].mults;
+    const mults = levels[risk].mults.map(adjustedMult);
     g.fillStyle = "#082b30";
     g.fillRect(0, 0, 520, 285);
     for (let r = 0; r < 8; r++)
@@ -2754,8 +2824,15 @@ function plinko() {
     document.querySelectorAll(".risk-pick").forEach((x) => (x.disabled = true));
     let dirs = Array.from({ length: 8 }, () => (Math.random() < 0.5 ? -1 : 1));
     if (lucky()) {
-      const side = Math.random() < 0.5 ? -1 : 1;
-      dirs = dirs.map(() => side);
+      const side = Math.random() < 0.5 ? -1 : 1,
+        extremeChance = 0.25 * Math.max(0.35, Math.pow(0.9, round - 1));
+      if (Math.random() < extremeChance) dirs = dirs.map(() => side);
+      else {
+        // Fortuna normalmente conduce al 9×: sette deviazioni favorevoli e
+        // una contraria in posizione casuale, senza garantire il 30×.
+        dirs = Array(8).fill(side);
+        dirs[Math.floor(Math.random() * dirs.length)] = -side;
+      }
     } else if (unlucky()) dirs = [-1, 1, -1, 1, -1, 1, -1, 1];
     const points = [{ x: 260, y: 8 }];
     let x = 260;
@@ -2764,7 +2841,8 @@ function plinko() {
       points.push({ x, y: 28 + r * 28 });
     });
     const index = dirs.filter((v) => v > 0).length,
-      mult = levels[risk].mults[index],
+      rawMult = levels[risk].mults[index],
+      mult = adjustedMult(rawMult),
       colors = ["#39e6d0", "#ffd166", "#ef476f", "#a778e8"];
     balls.push({
       x: 260,
