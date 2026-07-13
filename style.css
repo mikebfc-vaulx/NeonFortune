@@ -125,6 +125,9 @@ body:after {
   text-transform: uppercase;
 }
 .lobby-card input:disabled { opacity:0.6; cursor:not-allowed; color:#39e6d0; }
+.lobby-card input.input-error { border-color:#ef476f; box-shadow:0 0 12px #ef476f88; animation:fieldErrorPulse .5s steps(2) 3; }
+.field-error { display:block; margin-top:6px; color:#ef476f; font-size:8px; line-height:1.35; text-align:left; }
+@keyframes fieldErrorPulse { 50% { transform:translateX(4px); background:#351020; } }
 .profile-editor {
   margin: 14px 0;
   padding: 12px;
@@ -314,6 +317,13 @@ body:after {
 .waiting-room > button.is-ready {
   background: #ef476f;
   box-shadow: 4px 4px #7f203c;
+}
+.waiting-room > button.class-required,
+.waiting-room > button:disabled {
+  opacity:0.38;
+  filter:grayscale(1);
+  cursor:not-allowed;
+  box-shadow:2px 2px #292333;
 }
 .waiting-room > button.menu-return {
   margin-top: 9px;
@@ -1596,6 +1606,23 @@ button,
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
   }
+}
+
+.rules-page { display:block; min-height:100vh; padding:24px 12px; overflow:auto; background:#080712; }
+.rules-card { width:min(920px,100%); margin:0 auto; padding:28px; color:#ddd6e8; background:#17122b; border:4px solid #6e5799; box-shadow:8px 8px #030206; font:13px "Space Mono",monospace; line-height:1.65; }
+.rules-card h1 { color:#ffd166; font:22px "Press Start 2P"; line-height:1.5; }
+.rules-card h2 { margin-top:28px; padding-bottom:7px; color:#39e6d0; border-bottom:2px solid #4f3a70; font:13px "Press Start 2P"; line-height:1.4; }
+.rules-card h3 { color:#ffd166; font-size:12px; }
+.rules-card section, .rules-card article { padding:4px 0; }
+.rules-card li { margin:7px 0; }
+.rules-warning { padding:12px; color:#ffd166; background:#2b180d; border:2px solid #ffd166; }
+.rules-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.rules-grid article { padding:12px; background:#0d0919; border:1px solid #4f3a70; }
+.rules-back { color:#39e6d0; font-weight:bold; }
+@media (max-width:620px) {
+  .rules-card { padding:16px; font-size:11px; }
+  .rules-card h1 { font-size:16px; }
+  .rules-grid { grid-template-columns:1fr; }
 }
 .modal:not(.hidden) .game-panel {
   animation: panelEnter 0.25s steps(4);

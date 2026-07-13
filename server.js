@@ -72,7 +72,8 @@ function saveLeaderboard() {
 function recordRoom(room) {
   if (!room?.started || room.recorded) return;
   room.recorded = true;
-  leaderboard.push({ team:room.teamName || "Neon Team", level:room.maxRound || room.round, maxMoney:room.maxMoney || room.money, at:Date.now() });
+  if (!String(room.teamName || "").trim()) return;
+  leaderboard.push({ team:room.teamName, level:room.maxRound || room.round, maxMoney:room.maxMoney || room.money, at:Date.now() });
   saveLeaderboard();
   const data = { type:"leaderboard", boards:leaderboardPayload() };
   wss.clients.forEach((client) => send(client, data));
@@ -217,7 +218,7 @@ wss.on("connection", (ws) => {
           combo: 0,
           event: null,
           nextEvent: Date.now() + 35000,
-          teamName: String(m.teamName || "Neon Team").trim().slice(0,18) || "Neon Team",
+          teamName: String(m.teamName || "").trim().slice(0,18),
           ownerId: player.id,
           maxMoney: 1000,
           maxRound: 1,
@@ -233,14 +234,11 @@ wss.on("connection", (ws) => {
       }
       if (room.players.size >= 4)
         return send(ws, { type: "error", message: "Lobby piena: massimo 4 classi uniche" });
-      const requestedAvatar = Math.max(0, Math.min(3, +m.avatar || 0));
-      if ([...room.players.values()].some((p) => p.avatar === requestedAvatar))
-        return send(ws, { type: "error", message: "Classe già scelta da un altro giocatore" });
       player.name =
         String(m.name || "Player")
           .trim()
           .slice(0, 14) || "Player";
-      player.avatar = requestedAvatar;
+      player.avatar = null;
       player.ready = false;
       player.sessionNet = 0;
       player.room = roomCode;
@@ -277,21 +275,26 @@ wss.on("connection", (ws) => {
     } else if (m.type === "profile" && player.room) {
       const room = rooms.get(player.room);
       if (!room) return;
-      const requestedAvatar = Math.max(0, Math.min(3, +m.avatar || 0));
-      if ([...room.players.values()].some((p) => p.id !== player.id && p.avatar === requestedAvatar))
+      const requestedAvatar = m.avatar == null ? null : Math.max(0, Math.min(3, +m.avatar || 0));
+      if (requestedAvatar != null && [...room.players.values()].some((p) => p.id !== player.id && p.avatar === requestedAvatar))
         return send(ws, { type:"classError", avatar:player.avatar, message:"Classe già scelta da un altro giocatore" });
       player.name =
         String(m.name || player.name || "Player")
           .trim()
           .slice(0, 14) || "Player";
       player.avatar = requestedAvatar;
+      player.ready = false;
       if (player.id === room.ownerId) {
-        room.teamName = String(m.teamName || room.teamName || "Neon Team").trim().slice(0,18) || "Neon Team";
+        room.teamName = String(m.teamName ?? room.teamName ?? "").trim().slice(0,18);
         broadcast(room, { type:"teamUpdated", teamName:room.teamName });
       }
       broadcast(room, { type: "roster", players: roster(room) });
     } else if (m.type === "ready" && player.room) {
       const room = rooms.get(player.room);
+      if (m.ready && player.id === room.ownerId && !String(room.teamName || "").trim())
+        return send(ws, { type:"teamNameError", message:"Inserisci il nome della squadra prima di essere pronto" });
+      if (m.ready && player.avatar == null)
+        return send(ws, { type:"classError", avatar:null, message:"Seleziona una classe prima di essere pronto" });
       player.ready = !!m.ready;
       broadcast(room, { type: "roster", players: roster(room) });
       if (room.players.size && [...room.players.values()].every((p) => p.ready)) {

@@ -54,11 +54,11 @@ const mobileLabels = {
 };
 const mobileHints = { it:"TRASCINA SULLA MAPPA PER MUOVERTI", en:"DRAG ON THE MAP TO MOVE", fr:"GLISSEZ SUR LA CARTE POUR BOUGER", de:"ZUM BEWEGEN ÜBER DIE KARTE ZIEHEN", es:"ARRASTRA EN EL MAPA PARA MOVERTE" };
 const profileLocale = {
-  it:["AGGIORNA PROFILO","Puoi modificare nome e avatar anche dopo essere entrato. La partita parte quando tutti sono pronti."],
-  en:["UPDATE PROFILE","You can change your name and avatar after joining. The game starts when everyone is ready."],
-  fr:["METTRE À JOUR LE PROFIL","Vous pouvez modifier votre nom et votre avatar après avoir rejoint le salon. La partie commence quand tout le monde est prêt."],
-  de:["PROFIL AKTUALISIEREN","Du kannst Name und Avatar nach dem Beitritt ändern. Das Spiel beginnt, wenn alle bereit sind."],
-  es:["ACTUALIZAR PERFIL","Puedes cambiar tu nombre y avatar después de entrar. La partida comienza cuando todos están listos."]
+  it:["","Nome, squadra e personaggio si aggiornano automaticamente. La partita parte quando tutti sono pronti."],
+  en:["","Name, team and character update automatically. The game starts when everyone is ready."],
+  fr:["","Le nom, l'équipe et le personnage sont mis à jour automatiquement. La partie commence quand tout le monde est prêt."],
+  de:["","Name, Team und Figur werden automatisch aktualisiert. Das Spiel beginnt, wenn alle bereit sind."],
+  es:["","El nombre, el equipo y el personaje se actualizan automáticamente. La partida comienza cuando todos están listos."]
 };
 const missionLocale = {
   it:{collect:"Raccogli 2 misteri",punch:"Colpisci 5 personaggi",win:"Ottieni 3 vincite"},
@@ -93,6 +93,8 @@ const dynamicPhraseLocale = {
     ["Ladro colpito! Recupero del bottino...", "Thief hit! Recovering the loot..."],
     ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Thief KO! Collect the bag to recover the loot!"], ["Hai raccolto il sacco", "You collected the bag"], ["ha raccolto il sacco", "collected the bag"],
     ["Classe già scelta da un altro giocatore", "Class already chosen by another player"],
+    ["Seleziona una classe prima di essere pronto", "Select a class before getting ready"],
+    ["Inserisci il nome della squadra prima di essere pronto", "Enter the team name before getting ready"],
     ["FORTUNA", "LUCK"], ["SFORTUNA", "BAD LUCK"], ["DONAZIONE LIVELLO", "LEVEL DONATION"],
     ["RAZZIA LIVELLO", "LEVEL RAID"], ["TEMPO EXTRA", "EXTRA TIME"], ["TEMPO RUBATO", "TIME STOLEN"],
     ["LENTEZZA", "SLOWDOWN"], ["Livello", "Level"], ["Nuovo obiettivo", "New target"],
@@ -117,6 +119,8 @@ const dynamicPhraseLocale = {
     ["Ladro colpito! Recupero del bottino...", "Voleur touché ! Récupération du butin..."],
     ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Voleur KO ! Ramassez le sac pour récupérer le butin !"], ["Hai raccolto il sacco", "Vous avez ramassé le sac"], ["ha raccolto il sacco", "a ramassé le sac"],
     ["Classe già scelta da un altro giocatore", "Classe déjà choisie par un autre joueur"],
+    ["Seleziona una classe prima di essere pronto", "Choisissez une classe avant d'être prêt"],
+    ["Inserisci il nome della squadra prima di essere pronto", "Saisissez le nom de l'équipe avant d'être prêt"],
     ["FORTUNA", "CHANCE"], ["SFORTUNA", "MALCHANCE"], ["DONAZIONE LIVELLO", "DON DU NIVEAU"],
     ["RAZZIA LIVELLO", "RAID DU NIVEAU"], ["TEMPO EXTRA", "TEMPS SUPPLÉMENTAIRE"], ["TEMPO RUBATO", "TEMPS VOLÉ"],
     ["LENTEZZA", "RALENTISSEMENT"], ["Livello", "Niveau"], ["Nuovo obiettivo", "Nouvel objectif"],
@@ -141,6 +145,8 @@ const dynamicPhraseLocale = {
     ["Ladro colpito! Recupero del bottino...", "Dieb getroffen! Beute wird zurückgeholt..."],
     ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "Dieb KO! Sammle den Sack ein, um die Beute zurückzuholen!"], ["Hai raccolto il sacco", "Du hast den Sack eingesammelt"], ["ha raccolto il sacco", "hat den Sack eingesammelt"],
     ["Classe già scelta da un altro giocatore", "Klasse bereits von einem anderen Spieler gewählt"],
+    ["Seleziona una classe prima di essere pronto", "Wähle eine Klasse, bevor du bereit bist"],
+    ["Inserisci il nome della squadra prima di essere pronto", "Gib den Teamnamen ein, bevor du bereit bist"],
     ["FORTUNA", "GLÜCK"], ["SFORTUNA", "PECH"], ["DONAZIONE LIVELLO", "LEVEL-SPENDE"],
     ["RAZZIA LIVELLO", "LEVEL-RAUB"], ["TEMPO EXTRA", "EXTRAZEIT"], ["TEMPO RUBATO", "GESTOHLENE ZEIT"],
     ["LENTEZZA", "VERLANGSAMUNG"], ["Livello", "Level"], ["Nuovo obiettivo", "Neues Ziel"],
@@ -165,6 +171,8 @@ const dynamicPhraseLocale = {
     ["Ladro colpito! Recupero del bottino...", "¡Ladrón golpeado! Recuperando el botín..."],
     ["Ladro KO! Raccogli il sacco per recuperare il bottino!", "¡Ladrón KO! ¡Recoge el saco para recuperar el botín!"], ["Hai raccolto il sacco", "Has recogido el saco"], ["ha raccolto il sacco", "recogió el saco"],
     ["Classe già scelta da un altro giocatore", "Clase ya elegida por otro jugador"],
+    ["Seleziona una classe prima di essere pronto", "Elige una clase antes de estar listo"],
+    ["Inserisci il nome della squadra prima di essere pronto", "Introduce el nombre del equipo antes de estar listo"],
     ["FORTUNA", "SUERTE"], ["SFORTUNA", "MALA SUERTE"], ["DONAZIONE LIVELLO", "DONACIÓN DE NIVEL"],
     ["RAZZIA LIVELLO", "SAQUEO DE NIVEL"], ["TEMPO EXTRA", "TIEMPO EXTRA"], ["TEMPO RUBATO", "TIEMPO ROBADO"],
     ["LENTEZZA", "LENTITUD"], ["Livello", "Nivel"], ["Nuovo obiettivo", "Nuevo objetivo"],
@@ -228,6 +236,7 @@ function setLanguage(lang) {
     : t.ready);
   set("#waitingRoom small", t.waiting);
   set(".virtual-money-notice strong", t.virtualTitle); set(".virtual-money-notice span", t.virtualText); set('.legal-links a[href="terms.html"]', t.terms);
+  set('.legal-links a[href="rules.html"]', {it:"Regole",en:"Rules",fr:"Règles",de:"Regeln",es:"Reglas"}[lang]);
   set(".stat:not(.target):not(.timer) small", t.balance); const target = $(".stat.target small")?.childNodes[0]; if (target) target.nodeValue = `${t.objective} #`;
   set(".stat.timer small", t.time); set("#copyRoom", t.copy); set("#leaveRoom", t.back); set(".controls", t.controls);
   $("#prompt").innerHTML = t.prompt; set(".mission-box small", t.mission); set(".role-box small", t.skill); set(".combo-box small", t.combo);
@@ -290,8 +299,9 @@ let socket = null,
   lastNetworkSend = 0,
   lastSentX = 480,
   lastSentY = 440,
-  selectedAvatar = 0,
+  selectedAvatar = null,
   isReady = false,
+  isRoomHost = false,
   roomCodeVisible = false,
   myName = "Player",
   faceX = 1,
@@ -432,7 +442,7 @@ function renderLobby() {
   box.innerHTML = [...lobbyRoster.values()]
     .map(
       (p) =>
-        `<div class="lobby-player"><span>${avatarIcons[p.avatar] || "🎩"}</span><b>${p.name}${p.id === myId ? lobbyWords[0] : ""}</b><span class="${p.ready ? "ready" : "not-ready"}">${p.ready ? lobbyWords[1] : lobbyWords[2]}</span></div>`,
+        `<div class="lobby-player"><span>${p.avatar == null ? "❔" : avatarIcons[p.avatar]}</span><b>${p.name}${p.id === myId ? lobbyWords[0] : ""}</b><span class="${p.ready ? "ready" : "not-ready"}">${p.ready ? lobbyWords[1] : lobbyWords[2]}</span></div>`,
     )
     .join("");
   updateClassAvailability();
@@ -445,41 +455,50 @@ function updateClassAvailability() {
     button.classList.toggle("class-taken", taken);
     button.title = taken ? "Classe già scelta" : "";
   });
+  updateReadyAvailability();
+}
+function updateReadyAvailability() {
+  const readyButton = $("#readyButton");
+  if (!readyButton) return;
+  readyButton.disabled = selectedAvatar == null;
+  readyButton.classList.toggle("class-required", selectedAvatar == null);
 }
 function setRole() {
   const roles = {
     it:[
-      "FORTUNATO · +5% probabilità favorevole con Fortuna attiva",
+      "FORTUNATO · +5% probabilità favorevole permanente",
       "BANCHIERE · +5% su vincite, restituzioni e ricompense",
       "CORRIDORE · Velocità +15% · Tempo extra +25% · Tempo rubato −20%",
       "PICCHIATORE · Sbalzo +25% · Drop misterioso 35% (+10%)"
     ],
     en:[
-      "LUCKY · +5% favourable chance while Luck is active",
+      "LUCKY · Permanent +5% favourable chance",
       "BANKER · +5% on wins, returns and rewards",
       "RUNNER · Speed +15% · Extra time +25% · Time stolen −20%",
       "BRAWLER · Knockback +25% · Mystery drop 35% (+10%)"
     ],
     fr:[
-      "CHANCEUX · +5 % de chance favorable avec Chance active",
+      "CHANCEUX · +5 % de chance favorable permanente",
       "BANQUIER · +5 % sur gains, retours et récompenses",
       "COUREUR · Vitesse +15 % · Temps extra +25 % · Temps volé −20 %",
       "BAGARREUR · Projection +25 % · Drop mystère 35 % (+10 %)"
     ],
     de:[
-      "GLÜCKSPILZ · +5 % Gewinnchance bei aktivem Glück",
+      "GLÜCKSPILZ · Dauerhaft +5 % günstige Chance",
       "BANKIER · +5 % auf Gewinne, Rückgaben und Belohnungen",
       "LÄUFER · Tempo +15 % · Extrazeit +25 % · Zeitverlust −20 %",
       "SCHLÄGER · Rückstoß +25 % · Geheimnis-Drop 35 % (+10 %)"
     ],
     es:[
-      "AFORTUNADO · +5 % favorable con Suerte activa",
+      "AFORTUNADO · +5 % favorable permanente",
       "BANQUERO · +5 % en premios, devoluciones y recompensas",
       "CORREDOR · Velocidad +15 % · Tiempo extra +25 % · Tiempo robado −20 %",
       "LUCHADOR · Empuje +25 % · Drop misterioso 35 % (+10 %)"
     ]
   }[currentLanguage];
-  $("#roleName").textContent = roles[selectedAvatar];
+  $("#roleName").textContent = selectedAvatar == null
+    ? ({it:"SELEZIONA UNA CLASSE",en:"SELECT A CLASS",fr:"CHOISISSEZ UNE CLASSE",de:"KLASSE WÄHLEN",es:"ELIGE UNA CLASE"}[currentLanguage])
+    : roles[selectedAvatar];
 }
 function newMission() {
   mission = {
@@ -641,10 +660,14 @@ function connectMultiplayer() {
     const m = JSON.parse(e.data);
     if (m.type === "connected") myId = m.id;
     else if (m.type === "leaderboard") { leaderboardBoards = m.boards || leaderboardBoards; renderLeaderboard(); }
+    else if (m.type === "teamNameError") {
+      showTeamNameError(m.message || "Inserisci il nome della squadra");
+    }
     else if (m.type === "classError") {
-      selectedAvatar = +m.avatar || 0;
-      document.querySelectorAll(".avatar-choice").forEach((b) => b.classList.toggle("selected", +b.dataset.avatar === selectedAvatar));
+      selectedAvatar = m.avatar == null ? null : +m.avatar;
+      document.querySelectorAll(".avatar-choice").forEach((b) => b.classList.toggle("selected", selectedAvatar != null && +b.dataset.avatar === selectedAvatar));
       setRole();
+      updateReadyAvailability();
       toast(m.message || "Classe già scelta da un altro giocatore");
     }
     else if (m.type === "error") status.textContent = m.message;
@@ -652,10 +675,20 @@ function connectMultiplayer() {
     else if (m.type === "joined") {
       myId = m.id;
       currentRoom = m.code;
+      isRoomHost = m.ownerId === myId;
       isReady = false;
       applyEconomy(m.economy);
       lobbyRoster.clear();
       m.players.forEach((p) => lobbyRoster.set(p.id, p));
+      const joinedSelf = lobbyRoster.get(myId);
+      if (joinedSelf) {
+        myName = joinedSelf.name;
+        selectedAvatar = joinedSelf.avatar;
+        $("#playerName").value = myName;
+        document.querySelectorAll(".avatar-choice").forEach((button) =>
+          button.classList.toggle("selected", +button.dataset.avatar === selectedAvatar));
+        setRole();
+      }
       roomCodeVisible = false;
       renderRoomCode();
       $("#inviteLink").value = `${location.origin}${location.pathname}?room=${encodeURIComponent(m.code)}`;
@@ -670,12 +703,12 @@ function connectMultiplayer() {
       if (m.lootBag) receiveLootBag(m.lootBag);
       if (m.leaderboard) { leaderboardBoards = m.leaderboard; renderLeaderboard(); }
       if (m.session) renderSessionBoard(m.session);
-      $("#teamLobbyName").textContent = m.teamName || "Neon Team";
-      $("#teamName").value = m.teamName || "Neon Team";
-      $("#teamName").disabled = m.ownerId !== myId;
+      $("#teamLobbyName").textContent = m.teamName || "NOME SQUADRA MANCANTE";
+      $("#teamName").value = m.teamName || "";
+      $("#teamName").disabled = !isRoomHost;
     } else if (m.type === "teamUpdated") {
-      $("#teamLobbyName").textContent = m.teamName || "Neon Team";
-      $("#teamName").value = m.teamName || "Neon Team";
+      $("#teamLobbyName").textContent = m.teamName || "NOME SQUADRA MANCANTE";
+      if (document.activeElement !== $("#teamName")) $("#teamName").value = m.teamName || "";
     } else if (m.type === "playerJoined") {
       lobbyRoster.set(m.player.id, m.player);
       renderLobby();
@@ -798,7 +831,7 @@ function lobbyAction(type) {
   if (type === "join" && !code)
     return ($("#lobbyStatus").textContent = "Inserisci il codice della lobby");
   myName = name;
-  const teamName = $("#teamName").value.trim() || "Neon Team";
+  const teamName = $("#teamName").value.trim();
   socket.send(JSON.stringify({ type, name, code, avatar: selectedAvatar, teamName }));
   $("#lobbyStatus").textContent =
     type === "create" ? "Creazione lobby..." : "Accesso alla lobby...";
@@ -839,6 +872,7 @@ function returnToLobby() {
   droppedSacks.length = 0;
   closeGame();
   currentRoom = null;
+  isRoomHost = false;
   isReady = false;
   remotePlayers.clear();
   lobbyRoster.clear();
@@ -869,25 +903,49 @@ function syncLobbyProfile() {
   if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
   const name = $("#playerName").value.trim() || myName || "Player";
   myName = name.slice(0, 14);
-  const teamName = $("#teamName").value.trim() || "Neon Team";
+  const teamName = $("#teamName").value.trim();
   socket.send(JSON.stringify({ type: "profile", name: myName, avatar: selectedAvatar, teamName }));
 }
 function queueProfileUpdate() {
   clearTimeout(profileUpdateTimer);
   profileUpdateTimer = setTimeout(syncLobbyProfile, 300);
 }
+function showTeamNameError(message) {
+  const input = $("#teamName");
+  input.classList.add("input-error");
+  let error = $("#teamNameError");
+  if (!error) {
+    error = document.createElement("span");
+    error.id = "teamNameError";
+    error.className = "field-error";
+    input.insertAdjacentElement("afterend", error);
+  }
+  error.textContent = localizeLive(message);
+  error.classList.remove("hidden");
+  input.focus();
+}
+function clearTeamNameError() {
+  if (!$("#teamName").value.trim()) return;
+  $("#teamName").classList.remove("input-error");
+  $("#teamNameError")?.classList.add("hidden");
+}
 $("#playerName").addEventListener("input", queueProfileUpdate);
-$("#teamName").addEventListener("input", queueProfileUpdate);
+$("#teamName").addEventListener("input", () => { clearTeamNameError(); queueProfileUpdate(); });
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
     (x.onclick = () => {
       if (x.disabled) return;
-      selectedAvatar = +x.dataset.avatar;
+      const clickedAvatar = +x.dataset.avatar;
+      selectedAvatar = selectedAvatar === clickedAvatar ? null : clickedAvatar;
+      isReady = false;
       setRole();
       document
         .querySelectorAll(".avatar-choice")
-        .forEach((y) => y.classList.toggle("selected", y === x));
-      queueProfileUpdate();
+        .forEach((y) => y.classList.toggle("selected", selectedAvatar != null && +y.dataset.avatar === selectedAvatar));
+      $("#readyButton").classList.remove("is-ready");
+      $("#readyButton").textContent = translations[currentLanguage].ready;
+      updateReadyAvailability();
+      syncLobbyProfile();
     }),
 );
 async function copyLobbyText(value, success) {
@@ -900,7 +958,14 @@ async function copyLobbyText(value, success) {
 $("#copyWaitingCode").onclick = () => copyLobbyText(currentRoom, "Codice lobby copiato!");
 $("#copyInvite").onclick = () => copyLobbyText($("#inviteLink").value, "Link invito copiato!");
 $("#readyButton").onclick = () => {
-  if (!currentRoom) return;
+  if (isRoomHost && !$("#teamName").value.trim()) {
+    showTeamNameError("Inserisci il nome della squadra prima di essere pronto");
+    return;
+  }
+  if (!currentRoom || selectedAvatar == null) {
+    toast("Seleziona una classe prima di essere pronto");
+    return;
+  }
   isReady = !isReady;
   const cancelReady = { it:"ANNULLA PRONTO", en:"CANCEL READY", fr:"ANNULER PRÊT", de:"BEREIT AUFHEBEN", es:"CANCELAR LISTO" };
   $("#readyButton").textContent = isReady ? cancelReady[currentLanguage] : translations[currentLanguage].ready;
@@ -1801,11 +1866,12 @@ function collectLuck(forcedType = null, serverAward = false) {
   toast(`? ${msg}!`);
 }
 function lucky() {
-  if (luckTime <= 0 || luckBoost <= 0) return false;
-  const levelScale = Math.max(0.25, Math.pow(0.95, round - 1)),
-    chance = Math.min(0.95, (luckBoost + (selectedAvatar === 0 ? 0.05 : 0)) * levelScale),
+  const activeLuckBonus = luckTime > 0 && luckBoost > 0,
+    levelScale = Math.max(0.25, Math.pow(0.95, round - 1)),
+    classChance = selectedAvatar === 0 ? 0.05 : 0,
+    chance = Math.min(0.95, (activeLuckBonus ? luckBoost * levelScale : 0) + classChance),
     triggered = Math.random() < chance;
-  if (triggered) {
+  if (triggered && activeLuckBonus) {
     // Una singola Fortuna non può alimentare decine di risultati forzati.
     luckTime = Math.max(0, luckTime - 4);
     luckBoost *= 0.9;
