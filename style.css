@@ -124,6 +124,7 @@ body:after {
   border: 2px solid #6e5799;
   text-transform: uppercase;
 }
+.lobby-card input:disabled { opacity:0.6; cursor:not-allowed; color:#39e6d0; }
 .profile-editor {
   margin: 14px 0;
   padding: 12px;
@@ -142,6 +143,11 @@ body:after {
 #leaderboardList { margin-top:7px; display:grid; gap:3px; max-height:145px; overflow:auto; }
 .leaderboard-row { display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:5px; padding:5px; color:#ddd6e8; background:#120d20; font-size:7px; text-align:left; }
 .leaderboard-row em { color:#39e6d0; font-style:normal; text-align:right; }
+.leaderboard-row.podium { font-weight:bold; border:1px solid currentColor; }
+.leaderboard-row.podium-1 { color:#ffd166; background:#33240d; box-shadow:inset 3px 0 #ffd166, 0 0 8px #ffd16655; }
+.leaderboard-row.podium-2 { color:#d8e0ea; background:#222936; box-shadow:inset 3px 0 #d8e0ea; }
+.leaderboard-row.podium-3 { color:#d89152; background:#322014; box-shadow:inset 3px 0 #d89152; }
+.leaderboard-row.podium em { color:inherit; }
 .session-leaderboard { position:absolute; z-index:4; top:8px; left:8px; width:180px; padding:7px; color:#fff; background:#090715df; border:1px solid #6e5799; line-height:1.25; }
 .session-leaderboard > strong { display:block; margin-bottom:4px; color:#ffd166; font-size:7px; }
 .session-player { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:5px; padding:2px 0; font-size:7px; }
@@ -1558,6 +1564,17 @@ button,
   25% { transform: translate(var(--deadline-amp), calc(0px - var(--deadline-amp))); }
   50% { transform: translate(calc(0px - var(--deadline-amp)), var(--deadline-amp)); }
   75% { transform: translate(var(--deadline-amp), var(--deadline-amp)); }
+}
+.casino-wrap.theft-shake canvas {
+  animation: theftShake 0.5s steps(2, end) !important;
+}
+@keyframes theftShake {
+  15% { transform: translate(9px, -5px) rotate(0.25deg); }
+  30% { transform: translate(-8px, 5px) rotate(-0.2deg); }
+  45% { transform: translate(7px, 3px); }
+  60% { transform: translate(-6px, -4px); }
+  75% { transform: translate(4px, 2px); }
+  90% { transform: translate(-2px, -1px); }
 }
 
 /* HUD obiettivi stabile: resta in una riga sopra la mappa anche durante le

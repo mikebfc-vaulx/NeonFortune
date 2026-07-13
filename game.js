@@ -317,7 +317,7 @@ const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (c) => ({"&":"&a
 function renderLeaderboard() {
   const list = $("#leaderboardList"), rows = leaderboardBoards[activeBoard] || [];
   const empty = {it:"Nessun record",en:"No records",fr:"Aucun record",de:"Keine Rekorde",es:"Sin récords"}[currentLanguage];
-  list.innerHTML = rows.length ? rows.map((r,i) => `<div class="leaderboard-row"><b>#${i+1}</b><span>${escapeHtml(r.team)}</span><em>LV.${r.level} · ${fmt(r.maxMoney)}</em></div>`).join("") : `<div class="leaderboard-row"><span>—</span><span>${empty}</span><em>—</em></div>`;
+  list.innerHTML = rows.length ? rows.slice(0,10).map((r,i) => `<div class="leaderboard-row ${i < 3 ? `podium podium-${i+1}` : ""}"><b>#${i+1}</b><span>${escapeHtml(r.team)}</span><em>LV.${r.level} · ${fmt(r.maxMoney)}</em></div>`).join("") : `<div class="leaderboard-row"><span>—</span><span>${empty}</span><em>—</em></div>`;
 }
 function renderSessionBoard(rows = []) {
   $("#sessionBoardList").innerHTML = rows.map((p) => `<div class="session-player"><span>${escapeHtml(p.name)}</span><b class="${p.net >= 0 ? "positive" : "negative"}">${p.net >= 0 ? "+" : ""}${fmt(p.net)}</b></div>`).join("");
@@ -671,6 +671,11 @@ function connectMultiplayer() {
       if (m.leaderboard) { leaderboardBoards = m.leaderboard; renderLeaderboard(); }
       if (m.session) renderSessionBoard(m.session);
       $("#teamLobbyName").textContent = m.teamName || "Neon Team";
+      $("#teamName").value = m.teamName || "Neon Team";
+      $("#teamName").disabled = m.ownerId !== myId;
+    } else if (m.type === "teamUpdated") {
+      $("#teamLobbyName").textContent = m.teamName || "Neon Team";
+      $("#teamName").value = m.teamName || "Neon Team";
     } else if (m.type === "playerJoined") {
       lobbyRoster.set(m.player.id, m.player);
       renderLobby();
@@ -697,9 +702,10 @@ function connectMultiplayer() {
       if (thief?.id === m.id) { thief.stolen = true; thief.stolenAmount = m.stolen; }
       if (m.victim === myId) {
         theftAlert = { text: `−5%  ${fmt(m.stolen)}`, until: performance.now() + 1900 };
-        $(".casino-wrap").classList.remove("shake");
+        $(".casino-wrap").classList.remove("theft-shake");
         void $(".casino-wrap").offsetWidth;
-        $(".casino-wrap").classList.add("shake");
+        $(".casino-wrap").classList.add("theft-shake");
+        setTimeout(() => $(".casino-wrap")?.classList.remove("theft-shake"), 650);
       }
       toast(m.victim === myId
         ? `Un ladro ti ha rubato il 5%: -${fmt(m.stolen)}! Colpiscilo per recuperarli!`
@@ -843,6 +849,7 @@ function returnToLobby() {
   $("#lobby-screen").classList.remove("hidden");
   setTimeout(loadEligibleAds, 0);
   $("#lobbyEntry").classList.remove("hidden");
+  $("#teamName").disabled = false;
   $("#waitingRoom").classList.add("hidden");
   $("#readyButton").textContent = "SONO PRONTO";
   $("#readyButton").classList.remove("is-ready");
@@ -862,13 +869,15 @@ function syncLobbyProfile() {
   if (!currentRoom || socket?.readyState !== WebSocket.OPEN) return;
   const name = $("#playerName").value.trim() || myName || "Player";
   myName = name.slice(0, 14);
-  socket.send(JSON.stringify({ type: "profile", name: myName, avatar: selectedAvatar }));
+  const teamName = $("#teamName").value.trim() || "Neon Team";
+  socket.send(JSON.stringify({ type: "profile", name: myName, avatar: selectedAvatar, teamName }));
 }
 function queueProfileUpdate() {
   clearTimeout(profileUpdateTimer);
   profileUpdateTimer = setTimeout(syncLobbyProfile, 300);
 }
 $("#playerName").addEventListener("input", queueProfileUpdate);
+$("#teamName").addEventListener("input", queueProfileUpdate);
 document.querySelectorAll(".avatar-choice").forEach(
   (x) =>
     (x.onclick = () => {
@@ -1436,7 +1445,7 @@ function punch(strength = 0) {
     );
   if (thief?.stolen && socket?.readyState === WebSocket.OPEN) {
     const thiefDistance = Math.hypot(thief.x - player.x, thief.y - player.y),
-      thiefRange = 95 + strength * 30;
+      thiefRange = 140 + strength * 40;
     if (thiefDistance < thiefRange) {
       socket.send(JSON.stringify({ type: "thiefPunch", id: thief.id, strength }));
       impacts.push({ x: thief.x, y: thief.y, ttl: 0.45 });

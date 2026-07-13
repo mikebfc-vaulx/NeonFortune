@@ -63,7 +63,11 @@ function leaderboardPayload() {
   return Object.fromEntries(Object.entries(periods).map(([key, age]) => [key, rank(leaderboard.filter((x) => now - x.at <= age))]));
 }
 function saveLeaderboard() {
-  try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard.slice(-500), null, 2)); } catch {}
+  // Conserva soltanto i record necessari ai top 10 di ogni periodo.
+  const boards = leaderboardPayload(), keep = new Set();
+  Object.values(boards).flat().forEach((entry) => keep.add(`${entry.at}|${entry.team}|${entry.level}|${entry.maxMoney}`));
+  leaderboard = leaderboard.filter((entry) => keep.has(`${entry.at}|${entry.team}|${entry.level}|${entry.maxMoney}`));
+  try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2)); } catch {}
 }
 function recordRoom(room) {
   if (!room?.started || room.recorded) return;
@@ -73,6 +77,7 @@ function recordRoom(room) {
   const data = { type:"leaderboard", boards:leaderboardPayload() };
   wss.clients.forEach((client) => send(client, data));
 }
+saveLeaderboard();
 const roster = (room) =>
   [...room.players.values()].map((p) => ({
     id: p.id,
@@ -213,6 +218,7 @@ wss.on("connection", (ws) => {
           event: null,
           nextEvent: Date.now() + 35000,
           teamName: String(m.teamName || "Neon Team").trim().slice(0,18) || "Neon Team",
+          ownerId: player.id,
           maxMoney: 1000,
           maxRound: 1,
           started: false,
@@ -255,6 +261,7 @@ wss.on("connection", (ws) => {
         thief: room.thief,
         lootBag: room.lootBag,
         teamName: room.teamName,
+        ownerId: room.ownerId,
         leaderboard: leaderboardPayload(),
         session: sessionBoard(room),
       });
@@ -278,6 +285,10 @@ wss.on("connection", (ws) => {
           .trim()
           .slice(0, 14) || "Player";
       player.avatar = requestedAvatar;
+      if (player.id === room.ownerId) {
+        room.teamName = String(m.teamName || room.teamName || "Neon Team").trim().slice(0,18) || "Neon Team";
+        broadcast(room, { type:"teamUpdated", teamName:room.teamName });
+      }
       broadcast(room, { type: "roster", players: roster(room) });
     } else if (m.type === "ready" && player.room) {
       const room = rooms.get(player.room);
@@ -315,13 +326,13 @@ wss.on("connection", (ws) => {
       if (!thief || thief.stolen || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
       // Raggio ampio e tollerante alla latenza della posizione multiplayer.
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 130) return;
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 180) return;
       executeThiefSteal(room, player, thief);
     } else if (m.type === "thiefPunch" && player.room) {
       const room = rooms.get(player.room), thief = room?.thief;
       if (!thief || !thief.stolen || thief.recovered || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 130) return;
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 180) return;
       thief.recovered = true;
       const recovered = Math.max(0, Number(thief.stolenAmount) || 0);
       room.thief = null;
@@ -461,6 +472,20 @@ const eventTypes = [
   "MODALITÀ CAOS",
 ];
 const closableGames = ["blackjack", "roulette", "horses", "slots", "fortune", "dice", "plinko"];
+// Collisione rapida e autoritativa: evita che un ladro attraversi un
+// giocatore in movimento tra due tick degli eventi (che avvengono ogni 1s).
+const thiefCollisionTimer = setInterval(() => {
+  const now = Date.now();
+  rooms.forEach((room) => {
+    if (!room.thief || room.thief.stolen) return;
+    const pos = thiefPosition(room.thief, now),
+      victim = [...room.players.values()].find(
+        (p) => Math.hypot(p.x - pos.x, p.y - pos.y) <= 95,
+      );
+    if (victim) executeThiefSteal(room, victim, room.thief);
+  });
+}, 100);
+thiefCollisionTimer.unref();
 setInterval(() => {
   const now = Date.now();
   rooms.forEach((room) => {
