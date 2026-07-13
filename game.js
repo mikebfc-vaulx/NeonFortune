@@ -3225,9 +3225,23 @@ document.querySelectorAll(".leaderboard-tabs button").forEach((button) => {
   };
 });
 renderLeaderboard();
-const reusableAdUnits = new Map(
-  [...document.querySelectorAll("[data-ad-unit]")].map((ad) => [ad.dataset.adUnit, ad]),
-);
+const adUnitConfig = {
+  left: { slot: "5357088243" },
+  right: { slot: "5348936698" },
+  mobile: { slot: "4853122999" },
+};
+let renderedAdContext = "";
+function createAdUnit(unit) {
+  const ad = document.createElement("ins");
+  ad.className = "adsbygoogle";
+  ad.dataset.adUnit = unit;
+  ad.dataset.adClient = "ca-pub-8625715248094138";
+  ad.dataset.adSlot = adUnitConfig[unit].slot;
+  ad.dataset.adFormat = "auto";
+  ad.dataset.fullWidthResponsive = "true";
+  ad.style.display = "block";
+  return ad;
+}
 function loadEligibleAds() {
   const mobile = matchMedia("(max-width: 720px)").matches,
     desktop = matchMedia("(min-width: 1180px)").matches,
@@ -3236,25 +3250,17 @@ function loadEligibleAds() {
   const destinations = inLobby
     ? { left: ".lobby-ad-left", right: ".lobby-ad-right", mobile: ".lobby-ad-mobile" }
     : { left: ".ad-rail-left", right: ".ad-rail-right", mobile: ".mobile-ad-rail" };
-  reusableAdUnits.forEach((ad, unit) => {
-    if (!activeUnits.includes(unit)) return ad.remove();
+  const context = `${inLobby ? "lobby" : "game"}:${mobile ? "mobile" : desktop ? "desktop" : "compact"}`;
+  if (context === renderedAdContext) return;
+  renderedAdContext = context;
+  document.querySelectorAll("ins.adsbygoogle").forEach((ad) => ad.remove());
+  activeUnits.forEach((unit) => {
     const container = document.querySelector(destinations[unit]);
-    if (container && ad.parentElement !== container) container.appendChild(ad);
-  });
-  const selector = mobile
-      ? inLobby
-        ? ".lobby-ad-mobile .adsbygoogle:not([data-loaded])"
-        : ".mobile-ad-rail .adsbygoogle:not([data-loaded])"
-      : desktop
-        ? inLobby
-          ? ".lobby-ad .adsbygoogle:not([data-loaded])"
-          : ".ad-rail .adsbygoogle:not([data-loaded])"
-        : "";
-  if (!selector) return;
-  document.querySelectorAll(selector).forEach((ad) => {
+    if (!container) return;
+    const ad = createAdUnit(unit);
+    container.appendChild(ad);
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
-      ad.dataset.loaded = "true";
     } catch {
       // Ad blockers or a delayed AdSense response must not affect the game.
     }
