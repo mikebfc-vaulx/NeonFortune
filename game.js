@@ -1707,7 +1707,7 @@ function updateThief() {
   thief.y = thief.originY + thief.vy * elapsed;
   if (Date.now() >= thief.expiresAt) { thief = null; return; }
   const now = performance.now();
-  if (!thief.stolen && Math.hypot(player.x - thief.x, player.y - thief.y) < 68 && now - thief.lastContactSent > 320) {
+  if (!thief.stolen && Math.hypot(player.x - thief.x, player.y - thief.y) < 58 && now - thief.lastContactSent > 320) {
     thief.lastContactSent = now;
     if (currentRoom && socket?.readyState === WebSocket.OPEN)
       socket.send(JSON.stringify({ type: "thiefHit", id: thief.id }));
@@ -1716,6 +1716,16 @@ function updateThief() {
 function drawThief() {
   if (!thief) return;
   const bob = Math.sin(performance.now() / 85) * 2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(thief.x, thief.y, 58, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(239,71,111,0.055)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(239,71,111,0.28)";
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 5]);
+  ctx.stroke();
+  ctx.restore();
   ctx.save();
   ctx.translate(thief.x, thief.y + bob);
   if (thief.defeated && (thief.hitUntil || 0) > performance.now())

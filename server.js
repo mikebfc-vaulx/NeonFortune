@@ -329,7 +329,7 @@ wss.on("connection", (ws) => {
       if (!thief || thief.stolen || thief.id !== String(m.id || "")) return;
       const pos = thiefPosition(thief);
       // Raggio ampio e tollerante alla latenza della posizione multiplayer.
-      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 180) return;
+      if (Math.hypot(player.x - pos.x, player.y - pos.y) > 90) return;
       executeThiefSteal(room, player, thief);
     } else if (m.type === "thiefPunch" && player.room) {
       const room = rooms.get(player.room), thief = room?.thief;
@@ -483,7 +483,7 @@ const thiefCollisionTimer = setInterval(() => {
     if (!room.thief || room.thief.stolen) return;
     const pos = thiefPosition(room.thief, now),
       victim = [...room.players.values()].find(
-        (p) => Math.hypot(p.x - pos.x, p.y - pos.y) <= 95,
+        (p) => Math.hypot(p.x - pos.x, p.y - pos.y) <= 72,
       );
     if (victim) executeThiefSteal(room, victim, room.thief);
   });
@@ -500,7 +500,7 @@ setInterval(() => {
     if (room.thief && !room.thief.stolen) {
       const thiefPos = thiefPosition(room.thief, now);
       const victim = [...room.players.values()].find(
-        (p) => Math.hypot(p.x - thiefPos.x, p.y - thiefPos.y) <= 88,
+        (p) => Math.hypot(p.x - thiefPos.x, p.y - thiefPos.y) <= 72,
       );
       if (victim) executeThiefSteal(room, victim, room.thief);
     }
