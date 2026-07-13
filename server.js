@@ -15,6 +15,7 @@ const dbPool = process.env.DATABASE_URL
   ? new Pool({ connectionString:process.env.DATABASE_URL, ssl:{ rejectUnauthorized:false }, max:3 })
   : null;
 let dbSaveQueue = Promise.resolve();
+let databaseReady = false, databaseError = null;
 try {
   leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, "utf8"));
 } catch {
@@ -34,6 +35,16 @@ const types = {
 };
 const server = http.createServer((req, res) => {
   const urlPath = decodeURIComponent(req.url.split("?")[0]);
+  if (urlPath === "/api/storage-status") {
+    res.writeHead(200, { "Content-Type":"application/json; charset=utf-8", "Cache-Control":"no-store" });
+    return res.end(JSON.stringify({
+      storage:databaseReady ? "neon-postgres" : "temporary-json",
+      configured:!!process.env.DATABASE_URL,
+      connected:databaseReady,
+      records:leaderboard.length,
+      error:databaseError,
+    }));
+  }
   const wanted = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
   const file = path.resolve(ROOT, wanted);
   if (
@@ -111,9 +122,18 @@ async function initLeaderboardDatabase() {
     achieved_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`);
   const result = await dbPool.query("SELECT team, level, max_money, achieved_at FROM leaderboard_scores ORDER BY achieved_at ASC");
-  leaderboard = result.rows.map((row) => ({
-    team:row.team, level:Number(row.level), maxMoney:Number(row.max_money), at:new Date(row.achieved_at).getTime(),
-  }));
+  if (result.rows.length) {
+    leaderboard = result.rows.map((row) => ({
+      team:row.team, level:Number(row.level), maxMoney:Number(row.max_money), at:new Date(row.achieved_at).getTime(),
+    }));
+  }
+  databaseReady = true;
+  databaseError = null;
+  // Primo collegamento: importa nel database gli eventuali record locali.
+  if (!result.rows.length && leaderboard.length) {
+    saveLeaderboard();
+    await dbSaveQueue;
+  }
   console.log(`Leaderboard Neon loaded: ${leaderboard.length} records`);
 }
 function recordRoom(room) {
@@ -513,7 +533,11 @@ const heartbeat = setInterval(() => {
 heartbeat.unref();
 async function startServer() {
   try { await initLeaderboardDatabase(); }
-  catch (error) { console.error("Leaderboard Neon init error, using JSON fallback:", error.message); }
+  catch (error) {
+    databaseReady = false;
+    databaseError = error.message;
+    console.error("Leaderboard Neon init error, using JSON fallback:", error.message);
+  }
   server.listen(PORT, () => console.log(`Neon Fortune listening on ${PORT}`));
 }
 startServer();
