@@ -1,13 +1,26 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { Pool } = require("pg");
 const { WebSocketServer, WebSocket } = require("ws");
 
 const PORT = process.env.PORT || 3000;
 const ROOT = __dirname;
-const LEADERBOARD_FILE = path.join(ROOT, "leaderboard.json");
+const DATA_DIR = process.env.DATA_DIR || ROOT;
+const BUNDLED_LEADERBOARD_FILE = path.join(ROOT, "leaderboard.json");
+const LEADERBOARD_FILE = path.join(DATA_DIR, "leaderboard.json");
+try { fs.mkdirSync(DATA_DIR, { recursive:true }); } catch {}
 let leaderboard = [];
-try { leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, "utf8")); } catch { leaderboard = []; }
+const dbPool = process.env.DATABASE_URL
+  ? new Pool({ connectionString:process.env.DATABASE_URL, ssl:{ rejectUnauthorized:false }, max:3 })
+  : null;
+let dbSaveQueue = Promise.resolve();
+try {
+  leaderboard = JSON.parse(fs.readFileSync(LEADERBOARD_FILE, "utf8"));
+} catch {
+  try { leaderboard = JSON.parse(fs.readFileSync(BUNDLED_LEADERBOARD_FILE, "utf8")); }
+  catch { leaderboard = []; }
+}
 const MAX_ECONOMY = 1e300;
 const rooms = new Map();
 const types = {
@@ -68,6 +81,40 @@ function saveLeaderboard() {
   Object.values(boards).flat().forEach((entry) => keep.add(`${entry.at}|${entry.team}|${entry.level}|${entry.maxMoney}`));
   leaderboard = leaderboard.filter((entry) => keep.has(`${entry.at}|${entry.team}|${entry.level}|${entry.maxMoney}`));
   try { fs.writeFileSync(LEADERBOARD_FILE, JSON.stringify(leaderboard, null, 2)); } catch {}
+  if (dbPool) {
+    const snapshot = leaderboard.slice();
+    dbSaveQueue = dbSaveQueue.then(async () => {
+      const client = await dbPool.connect();
+      try {
+        await client.query("BEGIN");
+        await client.query("DELETE FROM leaderboard_scores");
+        for (const entry of snapshot)
+          await client.query(
+            "INSERT INTO leaderboard_scores(team, level, max_money, achieved_at) VALUES($1,$2,$3,$4)",
+            [entry.team, entry.level, entry.maxMoney, new Date(entry.at)],
+          );
+        await client.query("COMMIT");
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+      } finally { client.release(); }
+    }).catch((error) => console.error("Leaderboard Neon save error:", error.message));
+  }
+}
+async function initLeaderboardDatabase() {
+  if (!dbPool) return;
+  await dbPool.query(`CREATE TABLE IF NOT EXISTS leaderboard_scores (
+    id BIGSERIAL PRIMARY KEY,
+    team VARCHAR(18) NOT NULL,
+    level INTEGER NOT NULL,
+    max_money DOUBLE PRECISION NOT NULL,
+    achieved_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  )`);
+  const result = await dbPool.query("SELECT team, level, max_money, achieved_at FROM leaderboard_scores ORDER BY achieved_at ASC");
+  leaderboard = result.rows.map((row) => ({
+    team:row.team, level:Number(row.level), maxMoney:Number(row.max_money), at:new Date(row.achieved_at).getTime(),
+  }));
+  console.log(`Leaderboard Neon loaded: ${leaderboard.length} records`);
 }
 function recordRoom(room) {
   if (!room?.started || room.recorded) return;
@@ -78,7 +125,6 @@ function recordRoom(room) {
   const data = { type:"leaderboard", boards:leaderboardPayload() };
   wss.clients.forEach((client) => send(client, data));
 }
-saveLeaderboard();
 const roster = (room) =>
   [...room.players.values()].map((p) => ({
     id: p.id,
@@ -465,7 +511,12 @@ const heartbeat = setInterval(() => {
   });
 }, 20000);
 heartbeat.unref();
-server.listen(PORT, () => console.log(`Neon Fortune listening on ${PORT}`));
+async function startServer() {
+  try { await initLeaderboardDatabase(); }
+  catch (error) { console.error("Leaderboard Neon init error, using JSON fallback:", error.message); }
+  server.listen(PORT, () => console.log(`Neon Fortune listening on ${PORT}`));
+}
+startServer();
 
 const eventTypes = [
   "BLACKOUT",
