@@ -229,6 +229,31 @@ body:after {
 .legal-links a {
   color: #9cefe4;
 }
+.site-intro {
+  margin-top: 18px;
+  padding: 16px;
+  color: #d9d2e8;
+  background: #0d0919;
+  border: 2px solid #4f3a70;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.65;
+}
+.site-intro h2 {
+  margin: 0 0 10px;
+  color: #ffd166;
+  font: 10px/1.5 "Press Start 2P";
+}
+.site-intro p { color: #c6bed5; }
+.site-intro small { display: block; margin-top: 12px; color: #aaa1be; }
+.info-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.info-links a {
+  padding: 7px 9px;
+  color: #10101b;
+  background: #39e6d0;
+  font-weight: bold;
+  text-decoration: none;
+}
 .room-bar {
   padding: 7px 12px;
   text-align: center;
@@ -1619,6 +1644,8 @@ button,
 .rules-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .rules-grid article { padding:12px; background:#0d0919; border:1px solid #4f3a70; }
 .rules-back { color:#39e6d0; font-weight:bold; }
+.rules-nav { display:flex; flex-wrap:wrap; gap:14px; }
+.rules-nav a { color:#39e6d0; font-weight:bold; }
 @media (max-width:620px) {
   .rules-card { padding:16px; font-size:11px; }
   .rules-card h1 { font-size:16px; }
